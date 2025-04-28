@@ -57,12 +57,12 @@ print(timings$fl_snmf)
 
 ```{r}
 t0 <- proc.time()
-fl0 <- flash(Y,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
+fl0_mf <- flash(Y,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
              var_type = 0,
              greedy_Kmax = 40,nullcheck = FALSE,backfit = FALSE,
              verbose = 3)
 fl_mf <- flash_init(Y,var_type = 2,S = s1)
-fl_mf <- flash_factors_init(fl_mf,fl0,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace))
+fl_mf <- flash_factors_init(fl_mf,fl0_mf,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace))
 fl_mf <- flash_backfit(fl_mf,extrapolate = FALSE,maxiter = 100,verbose = 3)
 fl_mf <- flash_backfit(fl_mf,extrapolate = TRUE,maxiter = 100,verbose = 3)
 t1 <- proc.time()
