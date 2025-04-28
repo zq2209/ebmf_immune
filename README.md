@@ -1,6 +1,6 @@
-# single-cell-jamboree
+# Autoimmune Disease Matrix Factorization Analysis
 
-Exploratory analyses of single-cell data sets using different matrix
+Exploratory analyses of autoimmnue data sets using different matrix
 factorization approaches. 
 
 
