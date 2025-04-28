@@ -1,0 +1,141 @@
+---
+title: "gwas_preprocessing"
+author: "Zining Qi"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+First, we extract overlap variants in these autoimmune disease GWAS data
+
+```{r}
+# Load libraries (install if needed)
+library(data.table)
+
+# List all .h.tsv files
+files <- list.files(pattern = "\\.h\\.tsv$")
+
+# Read first file to initialize common variants
+common_variants <- fread(files[1], select = "variant_id")[[1]]
+
+# Iterate through remaining files and keep intersections
+for (file in files[c(-1, -12, -13)]) {
+  current_variants <- fread(file, select = "variant_id")[[1]]
+  common_variants <- intersect(common_variants, current_variants)
+  cat("Processed", file, "| Remaining variants:", length(common_variants), "\n")
+}
+
+# Save results
+writeLines(common_variants, "common_variant_ids.txt")
+cat("Final overlapping variants:", length(common_variants))
+```
+
+Then, we select these common variants and there corresponding effect sizes in each disease. 
+
+```{r}
+results_list <- list()
+
+# Loop through each file and extract the common variants
+for (file in files[c(-12, -13)]) {
+  # Read only the variant_id and beta columns for efficiency
+  gwas_data <- fread(file, select = c("variant_id", "beta"))
+  
+  # Filter for common variants and add filename as identifier
+  filtered_data <- gwas_data %>% 
+    filter(variant_id %in% common_variants) %>%
+    mutate(source = gsub("\\.h\\.tsv$", "", file))
+  
+  results_list[[file]] <- filtered_data
+}
+combined_results <- bind_rows(results_list)
+```
+
+
+```{r}
+duplicate_report <- list()
+
+for (file in files[c(-12, -13)]) {
+  gwas_data <- fread(file, select = c("variant_id", "beta"))
+  
+  filtered_data <- gwas_data %>% 
+    filter(variant_id %in% common_variants) %>%
+    mutate(source = gsub("\\.h\\.tsv$", "", file))
+  
+  # Identify duplicates
+  dup_variants <- filtered_data$variant_id[duplicated(filtered_data$variant_id)]
+  
+  if(length(dup_variants) > 0) {
+    duplicate_report[[file]] <- data.table(
+      file = file,
+      variant_id = unique(dup_variants),
+      n_duplicates = table(filtered_data$variant_id)[unique(dup_variants)]
+    )
+  }
+  
+  # Keep only first occurrence
+  results_list[[file]] <- filtered_data[!duplicated(filtered_data$variant_id), ]
+}
+```
+
+```{r}
+combined_results <- bind_rows(results_list)
+
+# Map source file names to its disease
+
+study_to_disease <- data.frame(
+  source = c("20190752-GCST000612-EFO_0001060",
+             "23749187-GCST005529-EFO_0003898",
+             "26192919-GCST003044-EFO_0000384",
+             "27329760-GCST003724-EFO_0000289",
+             "23143594-GCST005527-EFO_0000676",
+             "24076602-GCST005531-EFO_0003885",
+             "26192919-GCST003045-EFO_0000729",
+             "33830302-GCST90000529-EFO_0001359",
+             "23143596-GCST005569-EFO_0000685",
+             "26192919-GCST003043-EFO_0003767",
+             "26502338-GCST003156-EFO_0002690"),
+  disease = c("celiac_disease",
+              "ankylosing_spondylitis",
+              "crohns_disease",
+              "biopolar_disorder",
+              "psoriasis",
+              "multiple_sclerosis",
+              "ulcerative_colitis",
+              "type_1_diabetes",
+              "rheumatoid_arthritis",
+              "inflammatory_bowel_disease",
+              "systemic_lupus_erythematosus")
+)
+
+# Merge with your results
+combined_results <- merge(combined_results, study_to_disease, by = "source", all.x = TRUE)
+
+# Reshape to wide format if desired (one column per study)
+beta_matrix <- combined_results %>%
+  pivot_wider(
+    id_cols = variant_id,
+    names_from = disease,
+    values_from = beta
+  ) %>% 
+  as.data.frame() %>%
+  column_to_rownames("variant_id") 
+
+save(beta_matrix, file = "beta_matrix.RData")
+fwrite(beta_matrix, row.names = TRUE,
+       file = "beta_matrix.csv")
+```
+
+
+
+
+
+
+
+
+
+

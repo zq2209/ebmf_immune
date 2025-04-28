@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Peter Carbonetto" />
+
+
+<title>Tree-based representations of the pancreas data</title>
+
+<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">single-cell jamboree</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephenslab/single-cell-jamboree">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Tree-based representations of the pancreas
+data</h1>
+<h4 class="author">Peter Carbonetto</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-12-18
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>single-cell-jamboree/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephenslabsinglecelljamboreetreea09b4cf7e4d8caed3e6f6e5ae355c2d07e4c2a05targetblanka09b4cfa">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephenslab/single-cell-jamboree/tree/a09b4cf7e4d8caed3e6f6e5ae355c2d07e4c2a05" target="_blank">a09b4cf</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephenslabsinglecelljamboreetreea09b4cf7e4d8caed3e6f6e5ae355c2d07e4c2a05targetblanka09b4cfa"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephenslab/single-cell-jamboree/tree/a09b4cf7e4d8caed3e6f6e5ae355c2d07e4c2a05" target="_blank">a09b4cf</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Untracked files:
+    Untracked:  data/Immune_ALL_human.h5ad
+
+Unstaged changes:
+    Modified:   analysis/pancreas.Rmd
+    Modified:   analysis/pancreas_another_look.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/pancreas_trees.Rmd</code>) and
+HTML (<code>docs/pancreas_trees.html</code>) files. If you’ve configured
+a remote Git repository (see <code>?wflow_git_remote</code>), click on
+the hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/a09b4cf7e4d8caed3e6f6e5ae355c2d07e4c2a05/analysis/pancreas_trees.Rmd" target="_blank">a09b4cf</a>
+</td>
+<td>
+Peter Carbonetto
+</td>
+<td>
+2024-12-18
+</td>
+<td>
+workflowr::wflow_publish("pancreas_trees.Rmd", verbose = TRUE)
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/772d36bcfdd35f681405890ae8a5961dc1b4c9ab/analysis/pancreas_trees.Rmd" target="_blank">772d36b</a>
+</td>
+<td>
+Peter Carbonetto
+</td>
+<td>
+2024-12-18
+</td>
+<td>
+workflowr::wflow_publish("index.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<p>Here we build on the <a href="pancreas_another_look.html">“another
+look” analysis</a> and explore tree-based representations of the
+pancreas data.</p>
+<p>First, load the packages needed for this analysis.</p>
+<pre class="r"><code>library(Matrix)
+library(fastTopics)
+library(ggplot2)
+library(cowplot)
+library(ape)</code></pre>
+<p>Set the seed for reproducibility.</p>
+<pre class="r"><code>set.seed(1)</code></pre>
+<div id="cel-seq2-data" class="section level2">
+<h2>CEL-Seq2 data</h2>
+<p>Load the CEL-Seq2 pancreas data and the outputs generated by running
+the <code>compute_pancreas_celseq2_factors.R</code> script.</p>
+<pre class="r"><code>load(&quot;../data/pancreas.RData&quot;)
+load(&quot;../output/pancreas_celseq2_factors.RData&quot;)
+i           &lt;- which(sample_info$tech == &quot;celseq2&quot;)
+sample_info &lt;- sample_info[i,]
+counts      &lt;- counts[i,]
+sample_info &lt;- transform(sample_info,celltype = factor(celltype))</code></pre>
+<div id="topic-model-fasttopics" class="section level3">
+<h3>Topic model (fastTopics)</h3>
+<p>Here is the topic model (with 9 topics):</p>
+<pre class="r"><code>celltype &lt;- sample_info$celltype
+celltype &lt;-
+ factor(celltype,
+        c(&quot;acinar&quot;,&quot;ductal&quot;,&quot;activated_stellate&quot;,&quot;quiescent_stellate&quot;,
+          &quot;endothelial&quot;,&quot;macrophage&quot;,&quot;mast&quot;,&quot;schwann&quot;,&quot;alpha&quot;,&quot;beta&quot;,
+          &quot;delta&quot;,&quot;gamma&quot;,&quot;epsilon&quot;))
+L &lt;- poisson2multinom(pnmf)$L
+structure_plot(L,grouping = celltype,gap = 20,perplexity = 70,n = Inf)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/structure-plot-fasttopics-celseq2-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Fit a tree to the topics using the neighbor-joining tree
+algorithm:</p>
+<pre class="r"><code>par(mar = c(1,1,1,1))
+k &lt;- 9
+F &lt;- poisson2multinom(pnmf)$F
+D &lt;- as.matrix(dist(t(F)))
+rownames(D) &lt;- paste0(&quot;k&quot;,1:k)
+colnames(D) &lt;- paste0(&quot;k&quot;,1:k)
+tr &lt;- nj(D)
+tr$edge.length &lt;- abs(tr$edge.length)
+plot(tr,cex = 0.75,edge.width = 1.5,adj = 5,font = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/tree-fasttopics-celseq2-1.png" width="360" style="display: block; margin: auto;" /></p>
+</div>
+<div id="flashier-nmf" class="section level3">
+<h3>Flashier NMF</h3>
+<p>Here is the empirical Bayes NMF fit (with 9 factors):</p>
+<pre class="r"><code>L &lt;- fl_nmf_ldf$L
+k &lt;- ncol(L)
+colnames(L) &lt;- paste0(&quot;k&quot;,1:k)
+structure_plot(L[,-1],grouping = celltype,gap = 20,perplexity = 70,n = Inf) +
+  labs(y = &quot;membership&quot;,fill = &quot;factor&quot;,color = &quot;factor&quot;)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/structure-plot-flashier-nmf-celseq2-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Fit a tree to these factors using the neighbor-joining tree
+algorithm:</p>
+<pre class="r"><code>par(mar = c(1,1,1,1))
+k  &lt;- 9
+ks &lt;- 2:9
+D  &lt;- as.matrix(dist(t(fl_nmf_ldf$F)))
+rownames(D) &lt;- paste0(&quot;k&quot;,1:k)
+colnames(D) &lt;- paste0(&quot;k&quot;,1:k)
+tr &lt;- nj(D[ks,ks])
+tr$edge.length &lt;- abs(tr$edge.length)
+plot(tr,cex = 0.75,edge.width = 1.5,adj = 5,font = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/tree-flashier-nmf-celseq-1.png" width="360" style="display: block; margin: auto;" /></p>
+</div>
+<div id="nmf-nnlm" class="section level3">
+<h3>NMF (NNLM)</h3>
+<p>Let’s now have a look at the “vanilla” NMF (produced by the NNLM
+package). As before, this NMF has 9 factors.</p>
+<pre class="r"><code>scale_cols &lt;- function (A, b)
+  t(t(A) * b)
+W &lt;- nmf$W
+k &lt;- ncol(W)
+d &lt;- apply(W,2,max)
+W &lt;- scale_cols(W,1/d)
+colnames(W) &lt;- paste0(&quot;k&quot;,1:k)
+structure_plot(W,grouping = celltype,gap = 20,perplexity = 70,n = Inf) +
+  labs(y = &quot;membership&quot;,fill = &quot;factor&quot;,color = &quot;factor&quot;)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/structure-plot-nnlm-celseq2-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Fit a tree to these factors using the neighbor-joining tree
+algorithm:</p>
+<pre class="r"><code>par(mar = c(1,1,1,1))
+H &lt;- nmf$H
+d &lt;- apply(H,2,max)
+H &lt;- scale_cols(H,1/d)
+D &lt;- as.matrix(dist(H))
+rownames(D) &lt;- paste0(&quot;k&quot;,1:k)
+colnames(D) &lt;- paste0(&quot;k&quot;,1:k)
+tr &lt;- nj(D)
+tr$edge.length &lt;- abs(tr$edge.length)
+plot(tr,cex = 0.75,edge.width = 1.5,adj = 5,font = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/tree-nnlm-celseq-1.png" width="360" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="smart-seq2-data" class="section level2">
+<h2>Smart-seq2 data</h2>
+<p>Load the Smart-Seq2 data and the outputs generated from running the
+<code>compute_pancreas_smartseq2_factors.R</code> script.</p>
+<pre class="r"><code>load(&quot;../data/pancreas.RData&quot;)
+load(&quot;../output/pancreas_smartseq2_factors.RData&quot;)
+i           &lt;- which(sample_info$tech == &quot;smartseq2&quot;)
+sample_info &lt;- sample_info[i,]
+counts      &lt;- counts[i,]
+sample_info &lt;- transform(sample_info,celltype = factor(celltype))
+celltype &lt;- sample_info$celltype
+celltype &lt;-
+ factor(celltype,
+        c(&quot;acinar&quot;,&quot;ductal&quot;,&quot;activated_stellate&quot;,&quot;quiescent_stellate&quot;,
+          &quot;endothelial&quot;,&quot;macrophage&quot;,&quot;mast&quot;,&quot;schwann&quot;,&quot;alpha&quot;,
+          &quot;beta&quot;,&quot;delta&quot;,&quot;gamma&quot;,&quot;epsilon&quot;))</code></pre>
+<div id="topic-model-fasttopics-1" class="section level3">
+<h3>Topic model (fastTopics)</h3>
+<p>Here is the topic model with 9 topics:</p>
+<pre class="r"><code>L &lt;- poisson2multinom(pnmf)$L
+structure_plot(L,grouping = celltype,gap = 20,perplexity = 70,n = Inf)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/structure-plot-fasttopics-smartseq2-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Fit a tree to the topics using the neighbor-joining tree
+algorithm:</p>
+<pre class="r"><code>par(mar = c(1,1,1,1))
+k &lt;- 9
+F &lt;- poisson2multinom(pnmf)$F
+D &lt;- as.matrix(dist(t(F)))
+rownames(D) &lt;- paste0(&quot;k&quot;,1:k)
+colnames(D) &lt;- paste0(&quot;k&quot;,1:k)
+tr &lt;- nj(D)
+tr$edge.length &lt;- abs(tr$edge.length)
+plot(tr,cex = 0.75,edge.width = 1.5,adj = 5,font = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/tree-fasttopics-smartseq2-1.png" width="360" style="display: block; margin: auto;" /></p>
+</div>
+<div id="flashier-nmf-1" class="section level3">
+<h3>Flashier NMF</h3>
+<p>Here is the empirical Bayes NMF fit (with 9 factors):</p>
+<pre class="r"><code>L &lt;- fl_nmf_ldf$L
+k &lt;- ncol(L)
+colnames(L) &lt;- paste0(&quot;k&quot;,1:k)
+celltype_factors  &lt;- 2:7
+other_factors &lt;- c(1,8,9)
+p1 &lt;- structure_plot(L[,celltype_factors],grouping = celltype,gap = 20,
+                     perplexity = 70,n = Inf) +
+  labs(y = &quot;membership&quot;,fill = &quot;factor&quot;,color = &quot;factor&quot;,
+       title = &quot;cell-type factors&quot;)
+other_colors &lt;- c(&quot;#66c2a5&quot;,&quot;#fc8d62&quot;,&quot;#8da0cb&quot;)
+p2 &lt;- structure_plot(L[,other_factors],grouping = celltype,gap = 20,
+                     perplexity = 70,n = Inf) +
+  labs(y = &quot;membership&quot;,fill = &quot;factor&quot;,color = &quot;factor&quot;,
+       title = &quot;other factors&quot;) +
+  scale_color_manual(values = other_colors) +
+  scale_fill_manual(values = other_colors)
+plot_grid(p1,p2,nrow = 2,ncol = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/structure-plot-flashier-nmf-smartseq2-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Fit a tree to the cell-type factors using the neighbor-joining tree
+algorithm:</p>
+<pre class="r"><code>par(mar = c(1,1,1,1))
+k  &lt;- 9
+D  &lt;- as.matrix(dist(t(fl_nmf_ldf$F)))
+rownames(D) &lt;- paste0(&quot;k&quot;,1:k)
+colnames(D) &lt;- paste0(&quot;k&quot;,1:k)
+tr &lt;- nj(D[celltype_factors,celltype_factors])
+tr$edge.length &lt;- abs(tr$edge.length)
+plot(tr,cex = 0.75,edge.width = 1.5,adj = 5,font = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/tree-flashier-nmf-smartseq2-1.png" width="360" style="display: block; margin: auto;" /></p>
+</div>
+<div id="nmf-nnlm-1" class="section level3">
+<h3>NMF (NNLM)</h3>
+<p>This is the NMF decomposition (with 9 factors):</p>
+<pre class="r"><code>scale_cols &lt;- function (A, b)
+  t(t(A) * b)
+W &lt;- nmf$W
+k &lt;- ncol(W)
+d &lt;- apply(W,2,max)
+W &lt;- scale_cols(W,1/d)
+colnames(W) &lt;- paste0(&quot;k&quot;,1:k)
+celltype_factors  &lt;- c(3:6,8,9)
+other_factors &lt;- c(1,2,7)
+p1 &lt;- structure_plot(W[,celltype_factors],grouping = celltype,
+                     gap = 20,perplexity = 70,n = Inf) +
+  labs(y = &quot;membership&quot;,fill = &quot;factor&quot;,color = &quot;factor&quot;,
+       title = &quot;cell-type factors&quot;)
+p2 &lt;- structure_plot(W[,other_factors],grouping = celltype,
+                     gap = 20,perplexity = 70,n = Inf) +
+  scale_color_manual(values = other_colors) +
+  scale_fill_manual(values = other_colors) +
+  labs(y = &quot;membership&quot;,fill = &quot;factor&quot;,color = &quot;factor&quot;,
+       title = &quot;other factors&quot;)
+plot_grid(p1,p2,nrow = 2,ncol = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/structure-plots-nnlm-smartseq2-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Fit a tree to the cell-type factors using the neighbor-joining tree
+algorithm:</p>
+<pre class="r"><code>par(mar = c(1,1,1,1))
+H &lt;- nmf$H
+d &lt;- apply(H,2,max)
+H &lt;- scale_cols(H,1/d)
+D &lt;- as.matrix(dist(H))
+rownames(D) &lt;- paste0(&quot;k&quot;,1:k)
+colnames(D) &lt;- paste0(&quot;k&quot;,1:k)
+tr &lt;- nj(D[celltype_factors,celltype_factors])
+tr$edge.length &lt;- abs(tr$edge.length)
+plot(tr,cex = 0.75,edge.width = 1.5,adj = 5,font = 1)</code></pre>
+<p><img src="figure/pancreas_trees.Rmd/tree-nnlm-smartseq2-1.png" width="360" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()
+# R version 4.3.3 (2024-02-29)
+# Platform: aarch64-apple-darwin20 (64-bit)
+# Running under: macOS Sonoma 14.7.1
+# 
+# Matrix products: default
+# BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
+# LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+# 
+# locale:
+# [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+# 
+# time zone: America/Chicago
+# tzcode source: internal
+# 
+# attached base packages:
+# [1] stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# other attached packages:
+# [1] ape_5.8-1          cowplot_1.1.3      ggplot2_3.5.0      fastTopics_0.6-193
+# [5] Matrix_1.6-5      
+# 
+# loaded via a namespace (and not attached):
+#  [1] gtable_0.3.4        xfun_0.42           bslib_0.6.1        
+#  [4] htmlwidgets_1.6.4   ggrepel_0.9.5       lattice_0.22-5     
+#  [7] quadprog_1.5-8      vctrs_0.6.5         tools_4.3.3        
+# [10] generics_0.1.3      parallel_4.3.3      tibble_3.2.1       
+# [13] fansi_1.0.6         highr_0.10          pkgconfig_2.0.3    
+# [16] data.table_1.15.2   SQUAREM_2021.1      RcppParallel_5.1.7 
+# [19] lifecycle_1.0.4     truncnorm_1.0-9     farver_2.1.1       
+# [22] compiler_4.3.3      stringr_1.5.1       git2r_0.33.0       
+# [25] progress_1.2.3      munsell_0.5.0       RhpcBLASctl_0.23-42
+# [28] httpuv_1.6.14       htmltools_0.5.7     sass_0.4.8         
+# [31] yaml_2.3.8          lazyeval_0.2.2      plotly_4.10.4      
+# [34] crayon_1.5.2        later_1.3.2         pillar_1.9.0       
+# [37] jquerylib_0.1.4     whisker_0.4.1       tidyr_1.3.1        
+# [40] uwot_0.2.2.9000     cachem_1.0.8        nlme_3.1-164       
+# [43] gtools_3.9.5        tidyselect_1.2.1    digest_0.6.34      
+# [46] Rtsne_0.17          stringi_1.8.3       dplyr_1.1.4        
+# [49] purrr_1.0.2         ashr_2.2-66         labeling_0.4.3     
+# [52] rprojroot_2.0.4     fastmap_1.1.1       grid_4.3.3         
+# [55] colorspace_2.1-0    cli_3.6.2           invgamma_1.1       
+# [58] magrittr_2.0.3      utf8_1.2.4          withr_3.0.0        
+# [61] prettyunits_1.2.0   scales_1.3.0        promises_1.2.1     
+# [64] rmarkdown_2.26      httr_1.4.7          workflowr_1.7.1    
+# [67] hms_1.1.3           pbapply_1.7-2       evaluate_0.23      
+# [70] knitr_1.45          viridisLite_0.4.2   irlba_2.3.5.1      
+# [73] rlang_1.1.3         Rcpp_1.0.12         mixsqp_0.3-54      
+# [76] glue_1.7.0          jsonlite_1.8.8      R6_2.5.1           
+# [79] fs_1.6.3</code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

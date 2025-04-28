@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Junming Guan" />
+
+
+<title>Initial exploration of the human brain dataset: committed OPC cells</title>
+
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">single-cell jamboree</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephenslab/single-cell-jamboree">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Initial exploration of the human brain
+dataset: committed OPC cells</h1>
+<h4 class="author">Junming Guan</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-11-21
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>single-cell-jamboree/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephenslabsinglecelljamboreetree0d35e9396be6392785e00bc5ef7d872e640fa793targetblank0d35e93a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephenslab/single-cell-jamboree/tree/0d35e9396be6392785e00bc5ef7d872e640fa793" target="_blank">0d35e93</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephenslabsinglecelljamboreetree0d35e9396be6392785e00bc5ef7d872e640fa793targetblank0d35e93a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephenslab/single-cell-jamboree/tree/0d35e9396be6392785e00bc5ef7d872e640fa793" target="_blank">0d35e93</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    data/.Rhistory
+
+Untracked files:
+    Untracked:  .DS_Store
+    Untracked:  .gitignore
+    Untracked:  analysis/.DS_Store
+    Untracked:  analysis/human_brain_Astrocyte.Rmd
+    Untracked:  analysis/human_brain_COP_cells_fit.RData
+    Untracked:  code/read_gene_set_data.R
+    Untracked:  data/.DS_Store
+    Untracked:  data/Homo_sapiens.gene_info.gz
+    Untracked:  data/Human_brain_Astrocyte.rds
+    Untracked:  data/human_brain_COP_cells_fit.RData
+
+Unstaged changes:
+    Modified:   scripts/human_brain_COP_cells_fit.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/human_brain_COP_cells.Rmd</code>)
+and HTML (<code>docs/human_brain_COP_cells.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/0d35e9396be6392785e00bc5ef7d872e640fa793/analysis/human_brain_COP_cells.Rmd" target="_blank">0d35e93</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-21
+</td>
+<td>
+workflowr::wflow_publish("analysis/Human_brain_COP_cells.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/human_brain_COP_cells.html" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/82804929081bc40120fa206386b3b38b6c368007/analysis/human_brain_COP_cells.Rmd" target="_blank">8280492</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+<td>
+workflowr::wflow_publish("analysis/human_brain_COP_cells.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/human_brain_COP_cells.html" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/e8fc53fcf42b23566f0a564256ae34cb44060a95/analysis/human_brain_COP_cells.Rmd" target="_blank">e8fc53f</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+<td>
+workflowr::wflow_publish("human_brain_COP_cells.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level3">
+<h3>Introduction</h3>
+<p>This single-nucleus RNA seq dataset is from the paper “Transcriptomic
+diversity of cell types across the adult human brain” (Siletti, 2023).
+around 3 millions nuclei were collected from around 100 dissections from
+the following areas of brains of 3 donors:</p>
+<ul>
+<li><p>Forebrain:</p>
+<ul>
+<li><p>cerebral cortex</p></li>
+<li><p>cerebral nuclei</p></li>
+<li><p>hypothalamus</p></li>
+<li><p>hippocampus formation</p></li>
+<li><p>thalamus complex</p></li>
+</ul></li>
+<li><p>Midbrain</p></li>
+<li><p>Hindbrain:</p>
+<ul>
+<li><p>pons</p></li>
+<li><p>cerebellum</p></li>
+<li><p>Myelencephalon (Medulla)</p></li>
+</ul></li>
+<li><p>Spinal cord</p></li>
+</ul>
+<p>The authors performed hierarchical graph-based clustering, grouping
+the cells into superclusters, clusters, and subclusters. The data can be
+accessed <a
+href="https://data.humancellatlas.org/hca-bio-networks/nervous-system/atlases/brain-v1-0">here</a>,
+with files organized by supercluster or by dissection.</p>
+<p>This exploratory analysis focuses on committed oligodendrocyte
+precursor (COP) cells (see <a
+href="https://cellxgene.cziscience.com/e/f16f4108-7873-4035-9989-3748da1a7ff1.cxg/"
+class="uri">https://cellxgene.cziscience.com/e/f16f4108-7873-4035-9989-3748da1a7ff1.cxg/</a>).
+There are 4,720 cells and 2,1462 genes (after QC) in the dataset.</p>
+<pre class="r"><code>library(Matrix)
+# library(MatrixExtra)
+library(flashier)
+library(fastTopics)
+library(ggplot2)
+library(cowplot)
+library(dplyr)
+library(readr)
+library(knitr)
+# Warning: package &#39;knitr&#39; was built under R version 4.3.3</code></pre>
+<p>Load data and fit</p>
+<pre class="r"><code># Taken from https://github.com/stephenslab/pathways/blob/master/inst/code/read_gene_set_data.R
+read_gene_info &lt;- function (file) {
+  
+  # Read the data into a data frame.
+  out &lt;- suppressMessages(read_delim(file,delim = &quot;\t&quot;,col_names = TRUE))
+  class(out) &lt;- &quot;data.frame&quot;
+  dbXrefs    &lt;- out$dbXrefs
+  out        &lt;- out[c(&quot;GeneID&quot;,&quot;Symbol&quot;,&quot;Synonyms&quot;,&quot;chromosome&quot;)]
+  
+  # Set any entries with a single hyphen to NA, and convert the
+  # &quot;chromosome&quot; column to a factor.
+  out$chromosome[out$chromosome == &quot;-&quot;] &lt;- NA
+  out$Synonyms[out$Synonyms == &quot;-&quot;]     &lt;- NA
+  dbXrefs[dbXrefs == &quot;-&quot;]               &lt;- NA
+  out &lt;- transform(out,chromosome = factor(chromosome))
+  
+  # Extract the Ensembl ids. Note that a small number of genes map to
+  # more than one Ensembl id; in those cases, we retain the first
+  # Ensembl id only.
+  dbXrefs &lt;- strsplit(dbXrefs,&quot;|&quot;,fixed = TRUE)
+  out$Ensembl &lt;- sapply(dbXrefs,function (x) {
+    i &lt;- which(substr(x,1,8) == &quot;Ensembl:&quot;)
+    if (length(i) &gt; 0)
+      return(substr(x[i[1]],9,nchar(x[i[1]])))
+    else
+      return(as.character(NA))
+  })
+  
+  # For human genes, extract the HGNC (HUGO Gene Nomenclature
+  # Committee) ids.
+  out$HGNC &lt;- sapply(dbXrefs,function (x) {
+    i &lt;- which(substr(x,1,10) == &quot;HGNC:HGNC:&quot;)
+    if (length(i) &gt; 0)
+      return(substr(x[i[1]],6,nchar(x[i[1]])))
+    else
+      return(as.character(NA))
+  })
+  
+  # Return the processed gene data.
+  return(out)
+}
+
+homo_sapien_geno_info &lt;- read_gene_info(&#39;../data/Homo_sapiens.gene_info.gz&#39;)
+data &lt;- readRDS(&#39;../data/human_brain_COP_cells.rds&#39;)
+counts &lt;- t(data$RNA$data)
+# Warning: package &#39;SeuratObject&#39; was built under R version 4.3.3
+
+# Keep only genes that match those in homo sapien gene info and remove those without nonzero counts
+reduced_counts &lt;- 
+  counts[, colnames(counts) %in% homo_sapien_geno_info$Ensembl]
+cols_to_keep &lt;- colSums(reduced_counts != 0, na.rm = TRUE) &gt; 0
+reduced_counts &lt;- reduced_counts[, cols_to_keep]
+load(&#39;../data/human_brain_COP_cells_fit.RData&#39;)</code></pre>
+<pre class="r"><code>map_tissue &lt;- function(tissue) {
+  if (tissue %in% c(&quot;cerebral cortex&quot;, &quot;cerebral nuclei&quot;, &quot;hypothalamus&quot;, 
+                    &quot;hippocampal formation&quot;, &quot;thalamic complex&quot;)) {
+    return(&quot;forebrain&quot;)
+  } else if (tissue == &quot;midbrain&quot;) {
+    return(&quot;midbrain&quot;)
+  } else if (tissue %in% c(&quot;pons&quot;, &quot;cerebellum&quot;, &quot;myelencephalon&quot;)) {
+    return(&quot;hindbrain&quot;)
+  } else if (tissue == &quot;spinal cord&quot;) {
+    return(&quot;spinal cord&quot;)
+  } else {
+    return(NA)
+  }
+}
+
+regions &lt;- sapply(data$tissue, map_tissue)
+</code></pre>
+</div>
+<div id="t-sne-and-umap" class="section level3">
+<h3>t-SNE and UMAP</h3>
+<p>The dataset includes precomputed tSNE and UMAP embeddings, allowing
+us to plot them directly. We can color the cells by tissue, by region,
+or by cluster.</p>
+<div id="t-sne" class="section level4">
+<h4>t-SNE</h4>
+<pre class="r"><code># colors &lt;- brewer.pal(length(unique(data$tissue)), &quot;Paired&quot;)
+colors &lt;-  c(&#39;#756bb1&#39;, &#39;#1c9099&#39;, &#39;#d95f0e&#39;, &#39;#edf8b1&#39;, &#39;#dd1c77&#39;, &#39;#636363&#39;, &#39;#a1d99b&#39;, &#39;#fa9fb5&#39;, &#39;#fec44f&#39;, &#39;#de2d26&#39;)
+ggplot(Embeddings(data$tSNE) , aes(x = TSNE_1, y = TSNE_2, color = data$tissue)) +
+  geom_point(alpha = 0.7) +
+  labs(title = &quot;t-SNE Plot Colored by Tissue Type&quot;, x = &quot;t-SNE 1&quot;, y = &quot;t-SNE 2&quot;) +
+  theme_minimal() +
+  scale_color_manual(values = colors)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/tsne-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-tsne-1">
+Past versions of tsne-1.png
+</button>
+</p>
+<div id="fig-tsne-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/tsne-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+# colors &lt;- brewer.pal(length(unique(regions)), &quot;Set1&quot;)
+# ggplot(Embeddings(data$tSNE) , aes(x = TSNE_1, y = TSNE_2, color = regions)) +
+#   geom_point(alpha = 0.7) +
+#   labs(title = &quot;t-SNE Plot Colored by Tissue Type&quot;, x = &quot;t-SNE 1&quot;, y = &quot;t-SNE 2&quot;) +
+#   theme_minimal() +
+#   scale_color_manual(values = colors)
+
+# colors &lt;- brewer.pal(length(unique(data$cluster_id)), &quot;Paired&quot;)
+colors &lt;-  c(&#39;#756bb1&#39;, &#39;#1c9099&#39;, &#39;#d95f0e&#39;, &#39;#edf8b1&#39;, &#39;#dd1c77&#39;, &#39;#636363&#39;, &#39;#a1d99b&#39;)
+ggplot(Embeddings(data$tSNE) , aes(x = TSNE_1, y = TSNE_2, color = data$cluster_id)) +
+  geom_point(alpha = 0.7) +
+  labs(title = &quot;t-SNE Plot Colored by Cluster&quot;, x = &quot;t-SNE 1&quot;, y = &quot;t-SNE 2&quot;) +
+  theme_minimal() +
+  scale_color_manual(values = colors)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/tsne-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-tsne-2">
+Past versions of tsne-2.png
+</button>
+</p>
+<div id="fig-tsne-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/tsne-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="umap" class="section level4">
+<h4>UMAP</h4>
+<pre class="r"><code># colors &lt;- brewer.pal(length(unique(data$tissue)), &quot;Paired&quot;)
+colors &lt;-  c(&#39;#756bb1&#39;, &#39;#1c9099&#39;, &#39;#d95f0e&#39;, &#39;#edf8b1&#39;, &#39;#dd1c77&#39;, &#39;#636363&#39;, &#39;#a1d99b&#39;, &#39;#fa9fb5&#39;, &#39;#fec44f&#39;, &#39;#de2d26&#39;)
+ggplot(Embeddings(data$UMAP) , aes(x = UMAP_1, y = UMAP_2, color = data$tissue)) +
+  geom_point(alpha = 0.7) +
+  labs(title = &quot;UMAP Plot Colored by Tissue Type&quot;, x = &quot;UMAP 1&quot;, y = &quot;UMAP 2&quot;) +
+  theme_minimal() +
+  scale_color_manual(values = colors)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-1">
+Past versions of umap-1.png
+</button>
+</p>
+<div id="fig-umap-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/umap-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+# ggplot(Embeddings(data$UMAP) , aes(x = UMAP_1, y = UMAP_2, color = regions)) +
+#   geom_point(alpha = 0.7) +
+#   labs(title = &quot;UMAP Plot Colored by Tissue Type&quot;, x = &quot;UMAP 1&quot;, y = &quot;UMAP 2&quot;) +
+#   theme_minimal() +
+#   scale_color_manual(values = rainbow(length(unique(regions))))
+
+# colors &lt;- brewer.pal(length(unique(data$cluster_id)), &quot;Paired&quot;)
+colors &lt;-  c(&#39;#756bb1&#39;, &#39;#1c9099&#39;, &#39;#d95f0e&#39;, &#39;#edf8b1&#39;, &#39;#dd1c77&#39;, &#39;#636363&#39;, &#39;#a1d99b&#39;)
+ggplot(Embeddings(data$UMAP) , aes(x = UMAP_1, y = UMAP_2, color = data$cluster_id)) +
+  geom_point(alpha = 0.7) +
+  labs(title = &quot;UMAP Plot Colored by Cluster&quot;, x = &quot;UMAP 1&quot;, y = &quot;UMAP 2&quot;) +
+  theme_minimal() +
+  scale_color_manual(values = colors)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-2">
+Past versions of umap-2.png
+</button>
+</p>
+<div id="fig-umap-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/umap-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="flashier" class="section level3">
+<h3>Flashier</h3>
+<div id="nmf" class="section level4">
+<h4>NMF</h4>
+<p>Redefine subcluster ids so that the hierarchical structure is
+clearer</p>
+<pre class="r"><code># M &lt;- table(data$subcluster_id, data$cluster_id)
+# M
+subcluster_id &lt;- as.vector(data$subcluster_id)
+subcluster_id[subcluster_id == &#39;3033&#39;] &lt;- &#39;37.1&#39;
+subcluster_id[subcluster_id == &#39;3035&#39;] &lt;- &#39;37.2&#39;
+subcluster_id[subcluster_id == &#39;3036&#39;] &lt;- &#39;37.3&#39;
+subcluster_id[subcluster_id == &#39;3037&#39;] &lt;- &#39;37.4&#39;
+subcluster_id[subcluster_id == &#39;3038&#39;] &lt;- &#39;37.5&#39;
+
+subcluster_id[subcluster_id == &#39;3030&#39;] &lt;- &#39;38.1&#39;
+subcluster_id[subcluster_id == &#39;3031&#39;] &lt;- &#39;38.2&#39;
+subcluster_id[subcluster_id == &#39;3032&#39;] &lt;- &#39;38.3&#39;
+subcluster_id[subcluster_id == &#39;3034&#39;] &lt;- &#39;38.4&#39;
+
+subcluster_id[subcluster_id == &#39;3027&#39;] &lt;- &#39;39.1&#39;
+subcluster_id[subcluster_id == &#39;3028&#39;] &lt;- &#39;39.2&#39;
+subcluster_id[subcluster_id == &#39;3029&#39;] &lt;- &#39;39.3&#39;
+
+subcluster_id[subcluster_id == &#39;3014&#39;] &lt;- &#39;41.1&#39;
+subcluster_id[subcluster_id == &#39;3015&#39;] &lt;- &#39;42.2&#39;
+
+subcluster_id[subcluster_id == &#39;3007&#39;] &lt;- &#39;42.1&#39;
+subcluster_id[subcluster_id == &#39;3008&#39;] &lt;- &#39;42.2&#39;
+subcluster_id[subcluster_id == &#39;3009&#39;] &lt;- &#39;42.3&#39;
+subcluster_id[subcluster_id == &#39;3010&#39;] &lt;- &#39;42.4&#39;
+
+subcluster_id[subcluster_id == &#39;3006&#39;] &lt;- &#39;43.1&#39;
+
+subcluster_id[subcluster_id == &#39;3195&#39;] &lt;- &#39;75.1&#39;
+subcluster_id[subcluster_id == &#39;3196&#39;] &lt;- &#39;75.2&#39;
+subcluster_id &lt;- factor(subcluster_id)</code></pre>
+<pre class="r"><code>flash_plot_scree(flashier_fit)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-plot-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-plot-1">
+Past versions of flashier-plot-1.png
+</button>
+</p>
+<div id="fig-flashier-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-plot-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+
+plot(flashier_fit, 
+     plot_type = &quot;heatmap&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     gap = 25)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-plot-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-plot-2">
+Past versions of flashier-plot-2.png
+</button>
+</p>
+<div id="fig-flashier-plot-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-plot-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit, 
+     plot_type = &quot;histogram&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 25)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-plot-3.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-plot-3">
+Past versions of flashier-plot-3.png
+</button>
+</p>
+<div id="fig-flashier-plot-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-plot-3.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot(flashier_fit, 
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-1">
+Past versions of flashier-struc-plot-1.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit, 
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = subcluster_id,
+     bins = 60, gap = 100)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-2">
+Past versions of flashier-struc-plot-2.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>vals &lt;- ldf(flashier_fit,type=&quot;m&quot;)
+ncells &lt;- colSums(vals$L&gt;0.1)
+ncells
+#  [1] 4720 3101 1557   79 2059 1640 1281    1    5    1    4    2 1800</code></pre>
+<p>Several factors are load on only a small number of cells.</p>
+<p>Removing those factors from the structure plots:</p>
+<pre class="r"><code>plot(flashier_fit, 
+     kset = which(ncells &gt; 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-1">
+Past versions of flashier-struc-plot-reduced-1.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit, 
+     kset = which(ncells &gt; 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = subcluster_id,
+     bins = 60, gap = 100)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-2">
+Past versions of flashier-struc-plot-reduced-2.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Showing those factors in the structure plots:</p>
+<pre class="r"><code>plot(flashier_fit, 
+     kset = which(ncells &lt;= 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-outlier-1">
+Past versions of flashier-struc-plot-reduced-outlier-1.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-outlier-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit, 
+     kset = which(ncells &lt;= 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = subcluster_id,
+     bins = 60, gap = 100)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-outlier-2">
+Past versions of flashier-struc-plot-reduced-outlier-2.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-outlier-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Top 5 driving genes for factors that are loading on a small number of
+cells</p>
+<pre class="r"><code>F &lt;- with(vals, F %*% diag(D))
+rownames(F) &lt;- homo_sapien_geno_info$Symbol[match(rownames(F), 
+                                            homo_sapien_geno_info$Ensembl)]
+head(sort(F[,8], decreasing = TRUE), n = 16)
+
+
+top_genes &lt;- apply(F, 2, order, decreasing = TRUE)[1:5, which(ncells&lt;=5)]
+top_genes &lt;- rownames(flashier_fit$F_pm)[top_genes]
+
+plot(flashier_fit,
+     plot_type = &quot;heatmap&quot;,
+     pm_which = &quot;factors&quot;,
+     pm_subset = top_genes,
+     pm_groups = factor(top_genes),
+     kset = which(ncells&lt;=5),
+     gap = 0.5)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/driving-genes-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>Plot of mean shifted log expression vs. change for factor 8, with top
+5 genes (by largest increase)</p>
+<pre class="r"><code>plot(flashier_fit,
+     plot_type = &quot;scatter&quot;,
+     pm_which = &quot;factors&quot;,
+     kset = 8,
+     labels = TRUE,
+     n_labels = 5,
+     label_size = 2.5) +
+  labs(x = &quot;increase in shifted log expression&quot;,
+       y = &quot;mean shifted log expression&quot;) </code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/mean-log-count-vs-change-for-factor-8-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>Symbols of top 5 driving genes for</p>
+<pre class="r"><code>top5_genes_factor_8 &lt;- 
+  sort(with(vals, F %*% diag(D))[, 8], decreasing = TRUE) %&gt;% 
+  head(., 5) %&gt;%
+  names()
+homo_sapien_geno_info[match(top5_genes_factor_8, homo_sapien_geno_info$Ensembl),
+                      c(&#39;Symbol&#39;, &#39;Ensembl&#39;)]
+#       Symbol         Ensembl
+# 22566 MALAT1 ENSG00000251562
+# 3394   MEF2C ENSG00000081189
+# 7946   LPAR6 ENSG00000139679
+# 5159  SLC1A3 ENSG00000079215
+# 14744 OGFRL1 ENSG00000119900</code></pre>
+<p>For factor 8</p>
+<ul>
+<li>MALAT1 (Metastasis-Associated Lung Adenocarcinoma Transcript 1)
+<ul>
+<li>Long non-coding RNA (lncRNA)</li>
+</ul></li>
+<li>MEF2C (Myocyte Enhancer Factor 2C)
+<ul>
+<li>Transcription factor</li>
+</ul></li>
+<li>LPAR6 (Lysophosphatidic Acid Receptor 6)
+<ul>
+<li>G-protein-coupled receptor</li>
+</ul></li>
+<li>SLC1A3 (Solute Carrier Family 1 Member 3)
+<ul>
+<li>Glutamate transporter</li>
+</ul></li>
+<li>OGFRL1 (Opioid Growth Factor Receptor-Like 1)
+<ul>
+<li>Putative receptor</li>
+</ul></li>
+</ul>
+<p>From chatGPT</p>
+<div id="loadings-on-umap-by-factor" class="section level5">
+<h5>Loadings on UMAP by factor</h5>
+<p>Factor 2, 3 and 4 are heavily loaded, whereas factor 8 and 9 are
+loaded on a single cell.</p>
+<pre class="r"><code>umap &lt;- Embeddings(data$UMAP)
+source(&#39;../code/plot_loadings_on_umap.R&#39;)
+
+for (f in c(2, 3, 4, 8, 9)) {
+  loading &lt;- vals$L[, f]
+  p &lt;- plot_loadings_on_umap(umap, loading, f)
+  print(p)
+}</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-1">
+Past versions of umap-by-factor-1.png
+</button>
+</p>
+<div id="fig-umap-by-factor-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-1.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-2">
+Past versions of umap-by-factor-2.png
+</button>
+</p>
+<div id="fig-umap-by-factor-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-2.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-3.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-3">
+Past versions of umap-by-factor-3.png
+</button>
+</p>
+<div id="fig-umap-by-factor-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-3.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-4.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-4">
+Past versions of umap-by-factor-4.png
+</button>
+</p>
+<div id="fig-umap-by-factor-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-4.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-5.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-5">
+Past versions of umap-by-factor-5.png
+</button>
+</p>
+<div id="fig-umap-by-factor-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-5.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="semi-nmf" class="section level4">
+<h4>Semi-NMF</h4>
+<pre class="r"><code>flash_plot_scree(flashier_fit_semi)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-plot-cluster-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-plot-cluster-1">
+Past versions of flashier-plot-cluster-1.png
+</button>
+</p>
+<div id="fig-flashier-plot-cluster-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-plot-cluster-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+
+plot(flashier_fit_semi, 
+     plot_type = &quot;heatmap&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     gap = 25)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-plot-cluster-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-plot-cluster-2">
+Past versions of flashier-plot-cluster-2.png
+</button>
+</p>
+<div id="fig-flashier-plot-cluster-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-plot-cluster-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit_semi, 
+     plot_type = &quot;histogram&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 25)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-plot-cluster-3.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-plot-cluster-3">
+Past versions of flashier-plot-cluster-3.png
+</button>
+</p>
+<div id="fig-flashier-plot-cluster-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-plot-cluster-3.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot(flashier_fit_semi, 
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-seminmf-struc-plot-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-seminmf-struc-plot-1">
+Past versions of flashier-seminmf-struc-plot-1.png
+</button>
+</p>
+<div id="fig-flashier-seminmf-struc-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-seminmf-struc-plot-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit_semi, 
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = subcluster_id,
+     bins = 60, gap = 100)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-seminmf-struc-plot-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-seminmf-struc-plot-2">
+Past versions of flashier-seminmf-struc-plot-2.png
+</button>
+</p>
+<div id="fig-flashier-seminmf-struc-plot-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-seminmf-struc-plot-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>vals_semi &lt;- ldf(flashier_fit_semi, type=&quot;m&quot;)
+ncells_semi &lt;- colSums(vals_semi$L&gt;0.1)
+ncells_semi
+#  [1] 4720 3074 1702   72  558 1205 2239    1  308 1669    1 1497 1704  181 1584
+# [16]    1    1 1831 1900    3  126    1    2    1    3    1    2    5    1    6
+# [31]    1    2    1    1    4    1    1    5    1    1    4    2    1    4    2
+# [46]    2    2    3    1    3</code></pre>
+<p>Several factors are load on only a small number of cells.</p>
+<p>Removing those factors from the structure plots:</p>
+<pre class="r"><code>plot(flashier_fit_semi, 
+     kset = which(ncells_semi &gt; 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-semi-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-semi-1">
+Past versions of flashier-struc-plot-reduced-semi-1.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-semi-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-semi-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit_semi, 
+     kset = which(ncells_semi &gt; 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = subcluster_id,
+     bins = 60, gap = 100)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-semi-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-semi-2">
+Past versions of flashier-struc-plot-reduced-semi-2.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-semi-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-semi-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Showing factors that are only loaded on a small number of cells:</p>
+<pre class="r"><code>plot(flashier_fit_semi, 
+     kset = which(ncells_semi &lt;= 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-semi-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-outlier-semi-1">
+Past versions of flashier-struc-plot-reduced-outlier-semi-1.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-outlier-semi-1"
+class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-semi-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit_semi, 
+     kset = which(ncells_semi &lt;= 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = subcluster_id,
+     bins = 60, gap = 100)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-semi-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-flashier-struc-plot-reduced-outlier-semi-2">
+Past versions of flashier-struc-plot-reduced-outlier-semi-2.png
+</button>
+</p>
+<div id="fig-flashier-struc-plot-reduced-outlier-semi-2"
+class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/flashier-struc-plot-reduced-outlier-semi-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Top 5 driving genes for factors that are loading on a small number of
+cells</p>
+<pre class="r"><code>F &lt;- with(vals_semi, F %*% diag(D))
+rownames(F) &lt;- homo_sapien_geno_info$Symbol[match(rownames(F), 
+                                            homo_sapien_geno_info$Ensembl)]
+head(sort(F[,8], decreasing = TRUE), n = 16)
+# top_genes &lt;- apply(F, 2, order, decreasing = TRUE)[1:5, c(8, 11)]
+# top_genes &lt;- rownames(flashier_fit_semi$F_pm)[top_genes]
+# 
+# plot(flashier_fit_semi,
+#      plot_type = &quot;heatmap&quot;,
+#      pm_which = &quot;factors&quot;,
+#      pm_subset = top_genes,
+#      pm_groups = factor(top_genes),
+#      kset = c(8, 11),
+#      gap = 0.5)</code></pre>
+<p>Plot of mean shifted log expression vs. change for factor 8, with top
+5 genes (by largest increase)</p>
+<pre class="r"><code>plot(flashier_fit_semi,
+     plot_type = &quot;scatter&quot;,
+     pm_which = &quot;factors&quot;,
+     kset = c(8, 11, 16),
+     labels = TRUE,
+     n_labels = 5,
+     label_size = 2.5) +
+  labs(x = &quot;increase in shifted log expression&quot;,
+       y = &quot;mean shifted log expression&quot;) </code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/mean-log-count-vs-change-for-factor-8-11-16-semi-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>Symbols of top 5 driving genes for factor 11</p>
+<pre class="r"><code>top5_genes_factor_11 &lt;- 
+  sort(with(vals_semi, F %*% diag(D))[, 11], decreasing = TRUE) %&gt;% 
+  head(., 5) %&gt;%
+  names()
+homo_sapien_geno_info[match(top5_genes_factor_11, homo_sapien_geno_info$Ensembl),
+                      c(&#39;Symbol&#39;, &#39;Ensembl&#39;)]
+#          Symbol         Ensembl
+# 22566    MALAT1 ENSG00000251562
+# 14744    OGFRL1 ENSG00000119900
+# 43448 HIF1A-AS3 ENSG00000258667
+# 7946      LPAR6 ENSG00000139679
+# 5159     SLC1A3 ENSG00000079215</code></pre>
+<p>For factor 8</p>
+<ul>
+<li>MALAT1 (Metastasis-Associated Lung Adenocarcinoma Transcript 1)
+<ul>
+<li>Long non-coding RNA (lncRNA)</li>
+</ul></li>
+<li>OGFRL1 (Opioid Growth Factor Receptor-Like 1)
+<ul>
+<li>Putative receptor</li>
+</ul></li>
+<li>HIF1A-AS3
+<ul>
+<li>Associated with hypoxia regulation and cancer biology</li>
+<li>Long non-coding RNA (lncRNA)</li>
+</ul></li>
+<li>LPAR6 (Lysophosphatidic Acid Receptor 6)
+<ul>
+<li>G-protein-coupled receptor</li>
+</ul></li>
+<li>SLC1A3 (Solute Carrier Family 1 Member 3)
+<ul>
+<li>Glutamate transporter From chatGPT</li>
+</ul></li>
+</ul>
+<div id="loadings-on-umap-by-factor-1" class="section level5">
+<h5>Loadings on UMAP by factor</h5>
+<p>Factor 2 and 3 are heavily loaded, whereas factor 4, 8 and 11 are
+loaded on a few cells.</p>
+<pre class="r"><code>umap &lt;- Embeddings(data$UMAP)
+source(&#39;../code/plot_loadings_on_umap.R&#39;)
+
+for (f in c(2, 3, 4, 8, 11)) {
+  loading &lt;- vals_semi$L[, f]
+  p &lt;- plot_loadings_on_umap(umap, loading, f)
+  print(p)
+}</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-semi-1">
+Past versions of umap-by-factor-semi-1.png
+</button>
+</p>
+<div id="fig-umap-by-factor-semi-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-1.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-semi-2">
+Past versions of umap-by-factor-semi-2.png
+</button>
+</p>
+<div id="fig-umap-by-factor-semi-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-2.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-3.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-semi-3">
+Past versions of umap-by-factor-semi-3.png
+</button>
+</p>
+<div id="fig-umap-by-factor-semi-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-3.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-4.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-umap-by-factor-semi-4">
+Past versions of umap-by-factor-semi-4.png
+</button>
+</p>
+<div id="fig-umap-by-factor-semi-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47fa7919e2dd50fabe851f573ec036ca3219ee1e/docs/figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-4.png" target="_blank">47fa791</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/human_brain_COP_cells.Rmd/umap-by-factor-semi-5.png" width="840" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="comparison" class="section level4">
+<h4>Comparison</h4>
+<pre class="r"><code>
+plot(flashier_fit, 
+     kset = which(ncells &gt; 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/struc-plot-compare-1.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-struc-plot-compare-1">
+Past versions of struc-plot-compare-1.png
+</button>
+</p>
+<div id="fig-struc-plot-compare-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/struc-plot-compare-1.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>
+plot(flashier_fit_semi, 
+     kset = which(ncells_semi &gt; 5),
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = data$cluster_id,
+     bins = 30, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/struc-plot-compare-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-struc-plot-compare-2">
+Past versions of struc-plot-compare-2.png
+</button>
+</p>
+<div id="fig-struc-plot-compare-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7a353a38f854fb94549cb35701e57bc12d2e0651/docs/figure/human_brain_COP_cells.Rmd/struc-plot-compare-2.png" target="_blank">7a353a3</a>
+</td>
+<td>
+junmingguan
+</td>
+<td>
+2024-11-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>which.max(vals$L[, 8])
+which.max(vals_semi$L[, 11])
+# 10X390_3:GTTGTGAAGGCACGAT 
+#                      1706 
+# 10X390_3:GTTGTGAAGGCACGAT 
+#                      1706</code></pre>
+<p>Both actor 8 from Flashier NMF and factor 11 from Flashier semi-NMF
+seem to be loaded on the same cell.</p>
+</div>
+</div>
+<div id="fasttopics" class="section level3">
+<h3>FastTopics</h3>
+</div>
+<div id="k-50" class="section level2">
+<h2>K = 50</h2>
+<pre class="r"><code>plot_progress(fasttopics_fit_50,x = &quot;iter&quot;,add.point.every = 10,colors = &quot;black&quot;) +
+  theme_cowplot(font_size = 10)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-plot-progress-50-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>loglik &lt;- loglik_multinom_topic_model(reduced_counts, fasttopics_fit_50)
+pdat &lt;- data.frame(loglik)
+ggplot(pdat,aes(loglik)) +
+  geom_histogram(bins = 64,color = &quot;white&quot;,fill = &quot;black&quot;,size = 0.25) +
+  labs(y = &quot;number of cells&quot;) +
+  theme_cowplot(font_size = 10)
+# Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+# ℹ Please use `linewidth` instead.
+# This warning is displayed once every 8 hours.
+# Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+# generated.</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-loglik-plot-50-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>
+subpop_colors &lt;- c(&quot;red&quot;, &quot;blue&quot;, &quot;green&quot;, &quot;purple&quot;, &quot;orange&quot;, &quot;pink&quot;, &quot;cyan&quot;, &quot;brown&quot;, &quot;yellow&quot;, &quot;darkgreen&quot;)
+
+pdat &lt;- data.frame(loglik = loglik,subpop = data$cluster_id)
+ggplot(pdat,aes(x = loglik,fill = subpop)) +
+  geom_histogram(bins = 64,color = &quot;white&quot;,size = 0.25) +
+  scale_fill_manual(values = subpop_colors) +
+  labs(y = &quot;number of cells&quot;) +
+  theme_cowplot(font_size = 10)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-loglik-plot-50-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot(fasttopics_fit_50, grouping = data$cluster_id, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-50-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot(fasttopics_fit_50, grouping = subcluster_id, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-50-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ncells_ft_50 &lt;- colSums(fasttopics_fit_50$L&gt;0.1)
+ncells_ft_50
+#   k1   k2   k3   k4   k5   k6   k7   k8   k9  k10  k11  k12  k13  k14  k15  k16 
+#  251  252  355   22   25  138   10   10   51   49    7   70  552   46  217  449 
+#  k17  k18  k19  k20  k21  k22  k23  k24  k25  k26  k27  k28  k29  k30  k31  k32 
+#  113   70  205 1667  154  194  265  174  398  152  384   29  124  327  144  925 
+#  k33  k34  k35  k36  k37  k38  k39  k40  k41  k42  k43  k44  k45  k46  k47  k48 
+#  577  152   81 1025  163  267  354   13   75   61  518  297   45   92  889  136 
+#  k49  k50 
+#  101 1026</code></pre>
+<p>No factors that are loaded on a single cells. Still there are a
+couple that are loaded on a small number of cells, e.g., k11.</p>
+<p>Removing factors that are loading on few than 200.</p>
+<pre class="r"><code>structure_plot(fasttopics_fit_50, topics = which(ncells_ft_50 &gt;200),
+               grouping = data$cluster_id, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-50-reduced-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pca_plot(fasttopics_fit_50,fill = data$cluster_id)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-50-pca-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pca_hexbin_plot(fasttopics_fit_50,bins = 24)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-50-pca-2.png" width="840" style="display: block; margin: auto;" /></p>
+<p>Top 5 driving genes for factors loaded on a few cells</p>
+<pre class="r"><code>top5_genes_factor_7 &lt;- 
+  sort(fasttopics_fit_50$F[, 7], decreasing = TRUE) %&gt;% 
+  head(., 5) %&gt;%
+  names()
+homo_sapien_geno_info[match(top5_genes_factor_7, homo_sapien_geno_info$Ensembl),
+                      c(&#39;Symbol&#39;, &#39;Ensembl&#39;)]
+sort(fasttopics_fit_50$F[, 7], decreasing = TRUE) %&gt;% 
+  head(., 5)
+
+top5_genes_factor_8 &lt;- 
+  sort(fasttopics_fit_50$F[, 8], decreasing = TRUE) %&gt;% 
+  head(., 5) %&gt;%
+  names()
+homo_sapien_geno_info[match(top5_genes_factor_8, homo_sapien_geno_info$Ensembl),
+                      c(&#39;Symbol&#39;, &#39;Ensembl&#39;)]
+sort(fasttopics_fit_50$F[, 8], decreasing = TRUE) %&gt;% 
+  head(., 5)
+
+top5_genes_factor_11 &lt;- 
+  sort(fasttopics_fit_50$F[, 11], decreasing = TRUE) %&gt;% 
+  head(., 5) %&gt;%
+  names()
+homo_sapien_geno_info[match(top5_genes_factor_11, homo_sapien_geno_info$Ensembl),
+                      c(&#39;Symbol&#39;, &#39;Ensembl&#39;)]
+
+sort(fasttopics_fit_50$F[, 11], decreasing = TRUE) %&gt;% 
+  head(., 5)
+#       Symbol         Ensembl
+# 1661   ERBB4 ENSG00000178568
+# 22566 MALAT1 ENSG00000251562
+# 3257   LSAMP ENSG00000185565
+# 20214  CADM2 ENSG00000175161
+# 8975   NLGN1 ENSG00000169760
+# ENSG00000178568 ENSG00000251562 ENSG00000185565 ENSG00000175161 ENSG00000169760 
+#      0.11622755      0.03573029      0.02356664      0.01785754      0.01396652 
+#        Symbol         Ensembl
+# 4047    PDE4B ENSG00000184588
+# 22566  MALAT1 ENSG00000251562
+# 4357  PPP2R2B ENSG00000156475
+# 20214   CADM2 ENSG00000175161
+# 3257    LSAMP ENSG00000185565
+# ENSG00000184588 ENSG00000251562 ENSG00000156475 ENSG00000175161 ENSG00000185565 
+#      0.14022764      0.03307322      0.01717360      0.01491126      0.00890551 
+#        Symbol         Ensembl
+# 4357  PPP2R2B ENSG00000156475
+# 15995   MAML2 ENSG00000184384
+# 20214   CADM2 ENSG00000175161
+# 21942  NCKAP5 ENSG00000176771
+# 16290   FRMD5 ENSG00000171877
+# ENSG00000156475 ENSG00000184384 ENSG00000175161 ENSG00000176771 ENSG00000171877 
+#     0.262879278     0.005688911     0.005418745     0.004842882     0.004461895</code></pre>
+<ul>
+<li>ERBB4 (Receptor Tyrosine-Protein Kinase ErbB-4):
+<ul>
+<li>Part of the EGFR family.</li>
+<li>Involved in cell growth, survival, and differentiation.</li>
+<li>Dysregulation is linked to cancer and neurodevelopmental
+disorders.</li>
+</ul></li>
+<li>PDE4B (Phosphodiesterase 4B):
+<ul>
+<li>Degrades cAMP, a secondary messenger in cellular signaling.</li>
+<li>Implicated in psychiatric conditions, including schizophrenia and
+depression.</li>
+</ul></li>
+<li>PPP2R2B (Protein Phosphatase 2 Regulatory Subunit Bbeta):
+<ul>
+<li>Regulates protein dephosphorylation.</li>
+<li>Associated with spinocerebellar ataxias and neurodegeneration. From
+chatgpt</li>
+</ul></li>
+</ul>
+</div>
+<div id="k-10" class="section level2">
+<h2>K = 10</h2>
+<pre class="r"><code>plot_progress(fasttopics_fit_10,x = &quot;iter&quot;,add.point.every = 10,colors = &quot;black&quot;) +
+  theme_cowplot(font_size = 10)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-plot-progress-10-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>loglik &lt;- loglik_multinom_topic_model(reduced_counts, fasttopics_fit_10)
+pdat &lt;- data.frame(loglik)
+ggplot(pdat,aes(loglik)) +
+  geom_histogram(bins = 64,color = &quot;white&quot;,fill = &quot;black&quot;,size = 0.25) +
+  labs(y = &quot;number of cells&quot;) +
+  theme_cowplot(font_size = 10)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-loglik-plot-10-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>
+subpop_colors &lt;- c(&quot;red&quot;, &quot;blue&quot;, &quot;green&quot;, &quot;purple&quot;, &quot;orange&quot;, &quot;pink&quot;, &quot;cyan&quot;, &quot;brown&quot;, &quot;yellow&quot;, &quot;darkgreen&quot;)
+
+pdat &lt;- data.frame(loglik = loglik,subpop = data$cluster_id)
+ggplot(pdat,aes(x = loglik,fill = subpop)) +
+  geom_histogram(bins = 64,color = &quot;white&quot;,size = 0.25) +
+  scale_fill_manual(values = subpop_colors) +
+  labs(y = &quot;number of cells&quot;) +
+  theme_cowplot(font_size = 10)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-loglik-plot-10-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot(fasttopics_fit_10, grouping = data$cluster_id, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-10-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot(fasttopics_fit_10, grouping = subcluster_id, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-10-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ncells_ft_10 &lt;- colSums(fasttopics_fit_10$L&gt;0.1)
+ncells_ft_10
+#   k1   k2   k3   k4   k5   k6   k7   k8   k9  k10 
+# 1140  976  394 1141  671 3011 1360 1276   61  234</code></pre>
+<p>Removing factor 9</p>
+<pre class="r"><code>structure_plot(fasttopics_fit_10, topics = which(ncells_ft_10 &gt; 61),
+               grouping = data$cluster_id, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-10-reduced-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot(fasttopics_fit_10, topics = which(ncells_ft_10 &gt; 61),
+               grouping = subcluster_id, gap = 70)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-10-reduced-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pca_plot(fasttopics_fit_10,fill = data$cluster_id)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-10-pca-1.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pca_hexbin_plot(fasttopics_fit_10,bins = 24)</code></pre>
+<p><img src="figure/human_brain_COP_cells.Rmd/fasttopics-struc-plot-10-pca-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>top5_genes_factor_9 &lt;- 
+  sort(fasttopics_fit_10$F[, 9], decreasing = TRUE) %&gt;% 
+  head(., 5) %&gt;%
+  names()
+homo_sapien_geno_info[match(top5_genes_factor_9, homo_sapien_geno_info$Ensembl),
+                      c(&#39;Symbol&#39;, &#39;Ensembl&#39;)]
+sort(fasttopics_fit_10$F[, 9], decreasing = TRUE) %&gt;% 
+  head(., 5)
+#       Symbol         Ensembl
+# 5839     TTR ENSG00000118271
+# 22566 MALAT1 ENSG00000251562
+# 15061  TRPM3 ENSG00000083067
+# 2734   HTR2C ENSG00000147246
+# 15202 KCNIP4 ENSG00000185774
+# ENSG00000118271 ENSG00000251562 ENSG00000083067 ENSG00000147246 ENSG00000185774 
+#     0.191939663     0.023044075     0.005731441     0.003988197     0.003979024</code></pre>
+<p>“<strong>TTR</strong> encodes <strong>Transthyretin</strong>, a
+protein primarily synthesized in the <strong>liver</strong> and
+<strong>choroid plexus</strong> of the brain.” From chatGPT</p>
+<div id="gbcd" class="section level3">
+<h3>GBCD</h3>
+<p>TODO</p>
+<pre class="r"><code># source(&quot;../code/fit_cov_ebnmf.R&quot;)
+# 
+# fit.gbcd &lt;-
+#   flash_fit_cov_ebnmf(Y = reduced_counts, Kmax = 7,
+#                       prior = flash_ebnm(prior_family = &quot;generalized_binary&quot;,
+#                                          scale = 0.04),
+#                       extrapolate = FALSE)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()
+# R version 4.3.1 (2023-06-16)
+# Platform: aarch64-apple-darwin20 (64-bit)
+# Running under: macOS Sonoma 14.5
+# 
+# Matrix products: default
+# BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
+# LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+# 
+# locale:
+# [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+# 
+# time zone: America/Chicago
+# tzcode source: internal
+# 
+# attached base packages:
+# [1] stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# other attached packages:
+#  [1] SeuratObject_5.0.2 sp_2.1-4           knitr_1.48         readr_2.1.4       
+#  [5] dplyr_1.1.4        cowplot_1.1.3      ggplot2_3.5.1      fastTopics_0.6-192
+#  [9] flashier_1.0.54    ebnm_1.1-34        Matrix_1.6-4      
+# 
+# loaded via a namespace (and not attached):
+#  [1] pbapply_1.7-2        rlang_1.1.4          magrittr_2.0.3      
+#  [4] git2r_0.35.0         horseshoe_0.2.0      compiler_4.3.1      
+#  [7] vctrs_0.6.5          quadprog_1.5-8       stringr_1.5.1       
+# [10] pkgconfig_2.0.3      crayon_1.5.3         fastmap_1.2.0       
+# [13] labeling_0.4.3       utf8_1.2.4           promises_1.3.0      
+# [16] rmarkdown_2.28       tzdb_0.4.0           purrr_1.0.2         
+# [19] bit_4.0.5            xfun_0.48            cachem_1.1.0        
+# [22] trust_0.1-8          jsonlite_1.8.9       progress_1.2.3      
+# [25] highr_0.11           later_1.3.2          irlba_2.3.5.1       
+# [28] parallel_4.3.1       prettyunits_1.2.0    R6_2.5.1            
+# [31] bslib_0.8.0          stringi_1.8.4        RColorBrewer_1.1-3  
+# [34] SQUAREM_2021.1       parallelly_1.38.0    jquerylib_0.1.4     
+# [37] Rcpp_1.0.13          future.apply_1.11.3  httpuv_1.6.14       
+# [40] splines_4.3.1        tidyselect_1.2.1     rstudioapi_0.15.0   
+# [43] yaml_2.3.10          codetools_0.2-19     listenv_0.9.1       
+# [46] lattice_0.21-8       tibble_3.2.1         withr_3.0.2         
+# [49] evaluate_1.0.1       Rtsne_0.17           future_1.34.0       
+# [52] RcppParallel_5.1.9   pillar_1.9.0         whisker_0.4.1       
+# [55] plotly_4.10.4        softImpute_1.4-1     generics_0.1.3      
+# [58] vroom_1.6.3          rprojroot_2.0.3      invgamma_1.1        
+# [61] truncnorm_1.0-9      hms_1.1.3            munsell_0.5.1       
+# [64] scales_1.3.0         ashr_2.2-63          gtools_3.9.5        
+# [67] globals_0.16.3       RhpcBLASctl_0.23-42  glue_1.8.0          
+# [70] scatterplot3d_0.3-44 lazyeval_0.2.2       tools_4.3.1         
+# [73] hexbin_1.28.5        data.table_1.16.2    dotCall64_1.2       
+# [76] fs_1.6.4             grid_4.3.1           tidyr_1.3.1         
+# [79] colorspace_2.1-1     deconvolveR_1.2-1    cli_3.6.3           
+# [82] Polychrome_1.5.1     workflowr_1.7.1      spam_2.11-0         
+# [85] fansi_1.0.6          mixsqp_0.3-54        viridisLite_0.4.2   
+# [88] uwot_0.1.16          gtable_0.3.6         sass_0.4.9          
+# [91] digest_0.6.37        progressr_0.14.0     ggrepel_0.9.6       
+# [94] farver_2.1.2         htmlwidgets_1.6.4    htmltools_0.5.8.1   
+# [97] lifecycle_1.0.4      httr_1.4.7           bit64_4.0.5</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

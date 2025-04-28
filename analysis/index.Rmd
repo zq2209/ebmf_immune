@@ -1,0 +1,42 @@
+---
+title: Single-cell matrix factorization jamboree
+site: workflowr::wflow_site
+output: workflowr::wflow_html
+---
+
+See [here][google-sheet-data-sets] for an overview of the single-cell
+data sets.
+
+The [Human Cell Atlas][hca] is another potential source of interesting
+data sets.
+
+Note that some of the processed data sets can be downloaded from Box
+via [this link][box].
+
+**Analyses:**
+
++ [Initial exploration of the pancreas data set.](pancreas.html)
+
++ [Various attempts at factorizing the pancreas data set.](pancreas_factors.html)
+
++ [Another look at matrix factorization for the pancreas data.](pancreas_another_look.html)
+
++ [Annotation of pancreas factors.](pancreas_annotate.html)
+
++ [Tree-based representations of the pancreas data.](pancreas_trees.html)
+
++ [Exploring group-specific factors of the pancreas data.](pancreas_group.html)
+
++ [Revisiting semi-NMF for the pancreas data](pancreas_snmf.html)
+
++ [Improved UMAP plots for the pancreas data set.](Exploration_pancreas_data_using_Seurat.html)
+
++ [Initial exploration of the pancreas endocrine data set.](pancreas_endocrine.html)
+
++ [Exploratory analysis of human brain data, COP cells.](human_brain_COP_cells.html)
+
++ [Analysis of Single-Cell (Spatial) Transcriptomics From Mouse Embryos](mouse_embryo.html)
+
+[hca]: https://data.humancellatlas.org
+[google-sheet-data-sets]: https://docs.google.com/spreadsheets/d/199GDholbNEgwo6IQ5sIODBGmSI2xZ0lFZCSTUm438hY/edit?usp=sharing
+[box]: https://uchicago.box.com/s/l0emrjcqpw5yat1zaygtr1v3akq7de1t

@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Ziang Zhang" />
+
+<meta name="date" content="2024-11-15" />
+
+<title>Analysis of Single-cell (Spatial) Transcriptomics From Mouse Embryos</title>
+
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">single-cell jamboree</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephenslab/single-cell-jamboree">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Analysis of Single-cell (Spatial)
+Transcriptomics From Mouse Embryos</h1>
+<h4 class="author">Ziang Zhang</h4>
+<h4 class="date">2024-11-15</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-01-23
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>single-cell-jamboree/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephenslabsinglecelljamboreetree7981776daecedc8546b35bfdbf33362f6a82a0abtargetblank7981776a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephenslab/single-cell-jamboree/tree/7981776daecedc8546b35bfdbf33362f6a82a0ab" target="_blank">7981776</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephenslabsinglecelljamboreetree7981776daecedc8546b35bfdbf33362f6a82a0abtargetblank7981776a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephenslab/single-cell-jamboree/tree/7981776daecedc8546b35bfdbf33362f6a82a0ab" target="_blank">7981776</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  .DS_Store
+    Untracked:  analysis/.DS_Store
+    Untracked:  code/plot_loadings_on_locations.R
+    Untracked:  data/.DS_Store
+    Untracked:  data/mouse_embryo/
+    Untracked:  output/.DS_Store
+    Untracked:  output/mouse_embryo/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/mouse_embryo.Rmd</code>) and HTML
+(<code>docs/mouse_embryo.html</code>) files. If you’ve configured a
+remote Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/7981776daecedc8546b35bfdbf33362f6a82a0ab/analysis/mouse_embryo.Rmd" target="_blank">7981776</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-23
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/91de9dc88ddc297b2338e6e685f9a2e345218058/docs/mouse_embryo.html" target="_blank">91de9dc</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/4f94bdf58099ac1226fb66d920018d1da69bb90c/analysis/mouse_embryo.Rmd" target="_blank">4f94bdf</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/9e347ddd2ead134aeee99a6a393b5f90e0a3c59b/docs/mouse_embryo.html" target="_blank">9e347dd</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/82e82de95caf2a23e3550cdd7176a41db356fb48/analysis/mouse_embryo.Rmd" target="_blank">82e82de</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/06856f38d0034d4ab5ac466986f62a39c8106ef3/docs/mouse_embryo.html" target="_blank">06856f3</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-12-03
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5f0f81be7480771ad392280abc5e159c87430d66/analysis/mouse_embryo.Rmd" target="_blank">5f0f81b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-12-03
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/62d57282f521edbfa8d84578be21cc0e92bed41d/docs/mouse_embryo.html" target="_blank">62d5728</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/749a0c447adfaeea48a29543c6cc375361e678d5/analysis/mouse_embryo.Rmd" target="_blank">749a0c4</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/mouse_embryo.html" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/61587ca8446ffd26449021f245be77e61c3f6fe0/analysis/mouse_embryo.Rmd" target="_blank">61587ca</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/3f6c4707ce2d02c4e6429261c11331703419f32e/docs/mouse_embryo.html" target="_blank">3f6c470</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/47d0693b6a0bc9690b5b19f773a7084c94c012e3/analysis/mouse_embryo.Rmd" target="_blank">47d0693</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/99a79f644ae8345d39138ba78b372b185c13c220/docs/mouse_embryo.html" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/a70fb60a7ec2592fb7a02dfbafd40581573dff31/analysis/mouse_embryo.Rmd" target="_blank">a70fb60</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/070d27ca300bc5b1d13d24daf0e9169fca6e3994/docs/mouse_embryo.html" target="_blank">070d27c</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/074ea5c2fff7ebc1e20caa84eaf044767a035ab7/analysis/mouse_embryo.Rmd" target="_blank">074ea5c</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephenslab/single-cell-jamboree/4a0968804299baa24fae6e408049b02025d4d094/docs/mouse_embryo.html" target="_blank">4a09688</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/90cbbb9fbe86fe0b5d5a07e04e89c97a944d8922/analysis/mouse_embryo.Rmd" target="_blank">90cbbb9</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+<td>
+workflowr::wflow_publish("analysis/mouse_embryo.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>This single cell RNA data is available <a
+href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE166692">here</a>,
+as studied in <a
+href="https://www.science.org/doi/10.1126/science.abb9536">Srivatsan et
+al, 2021</a>.</p>
+<p>The dataset considers <span class="math inline">\(108725\)</span>
+cells and <span class="math inline">\(39198\)</span> genes (after QC),
+measured with spatial locations in the mouse embryo.</p>
+<pre class="r"><code>library(Seurat)
+library(Matrix)
+library(data.table)
+library(flashier)
+library(ggplot2)
+library(patchwork)
+library(cowplot)
+library(RColorBrewer)
+library(Biobase)
+library(ggpubr)
+library(gridExtra)
+library(fastTopics)
+library(tidyverse)
+source(&#39;../code/plot_loadings_on_umap.R&#39;)
+source(&quot;../code/Customized_Plots.R&quot;)
+source(&quot;../code/plot_loadings_on_locations.R&quot;)
+seurat_object &lt;- readRDS(&quot;../data/mouse_embryo/processed_seurat/seurat_object.rds&quot;)</code></pre>
+<p>The data contains the UMAP information that we can directly use for
+visualization, and compare with the “anatomical annotation” and the
+“cluster label” in <a
+href="https://www.science.org/doi/10.1126/science.abb9536">Srivatsan et
+al, 2021</a>.</p>
+<pre class="r"><code>umap_original_embeddings &lt;- cbind(seurat_object$umap1, seurat_object$umap2)
+p1 &lt;- DimPlotSagnik(umap_original_embeddings, group.by = seurat_object$anatomical_annotation, pt.size = 1) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle(&quot;UMAP by Anatomical Annotation&quot;)
+
+p2 &lt;- DimPlotSagnik(umap_original_embeddings, group.by = seurat_object$final_cluster_label, pt.size = 1) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle(&quot;UMAP by Cluster Label&quot;)
+
+# Combine plots side-by-side
+combined_plot &lt;- p1 + p2 + plot_layout(ncol = 2)
+combined_plot</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-2-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/4a0968804299baa24fae6e408049b02025d4d094/docs/figure/mouse_embryo.Rmd/unnamed-chunk-2-1.png" target="_blank">4a09688</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="trying-ebmf" class="section level2">
+<h2>Trying EBMF</h2>
+<p>Let’s try to implement the EBMF algorithm with the
+<code>flashier</code> package, with different constraints and prior
+distributions.</p>
+<pre class="r"><code>cols_to_keep &lt;- colSums(Y != 0, na.rm = TRUE) &gt; 0
+Y &lt;- Y[, cols_to_keep]
+n  &lt;- nrow(Y)
+x  &lt;- rpois(1e7, 1/n)
+s1 &lt;- sd(log(x + 1))
+a &lt;- 1
+size_factors &lt;- rowSums(Y)
+size_factors &lt;- size_factors / mean(size_factors)
+# shifted_log_counts &lt;- log1p(Y / (a * size_factors))
+shifted_log_counts &lt;- MatrixExtra::mapSparse(Y/(a*size_factors),log1p)</code></pre>
+<div id="non-negative-ebmf" class="section level3">
+<h3>Non-Negative EBMF</h3>
+<p>For the first EBMF problem, we consider non-negative EBMF with
+<code>point_exponential</code> priors:</p>
+<pre class="r"><code>flashier_fit_nn &lt;- flash(shifted_log_counts,
+                      ebnm_fn = ebnm_point_exponential,
+                      var_type = 2,
+                      greedy_Kmax = 25,
+                      S = s1,
+                      backfit = T)
+plot(flashier_fit_nn, 
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = seurat_object$final_cluster_label,
+     bins = 20, gap = 70)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-5-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/99a79f644ae8345d39138ba78b372b185c13c220/docs/figure/mouse_embryo.Rmd/unnamed-chunk-5-1.png" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/4a0968804299baa24fae6e408049b02025d4d094/docs/figure/mouse_embryo.Rmd/unnamed-chunk-5-1.png" target="_blank">4a09688</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="semi-non-negative-ebmf" class="section level3">
+<h3>Semi Non-Negative EBMF</h3>
+<pre class="r"><code>ebnm_fn_list &lt;- list()
+ebnm_fn_list[[1]] &lt;- flash_ebnm(
+  prior_family = &quot;point_exponential&quot;
+)
+ebnm_fn_list[[2]] &lt;- flash_ebnm(
+  prior_family = &quot;point_normal&quot;,
+  mode = &quot;estimate&quot;
+)
+flashier_fit_semi &lt;- flash(shifted_log_counts,
+                      ebnm_fn = ebnm_fn_list,
+                      var_type = 2,
+                      greedy_Kmax = 25,
+                      S = s1,
+                      backfit = T)
+plot(flashier_fit_semi, 
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = seurat_object$final_cluster_label,
+     bins = 20, gap = 70)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-7-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/99a79f644ae8345d39138ba78b372b185c13c220/docs/figure/mouse_embryo.Rmd/unnamed-chunk-7-1.png" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/4a0968804299baa24fae6e408049b02025d4d094/docs/figure/mouse_embryo.Rmd/unnamed-chunk-7-1.png" target="_blank">4a09688</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="gb-semi-non-negative-ebmf" class="section level3">
+<h3>GB Semi Non-Negative EBMF</h3>
+<pre class="r"><code>ebnm_fn_list &lt;- list()
+ebnm_fn_list[[1]] &lt;- flash_ebnm(
+  prior_family = &quot;generalized_binary&quot;
+)
+ebnm_fn_list[[2]] &lt;- flash_ebnm(
+  prior_family = &quot;point_laplace&quot;,
+  mode = &quot;estimate&quot;
+)
+flashier_fit_gbcd &lt;- flash(shifted_log_counts,
+                      ebnm_fn = ebnm_fn_list,
+                      var_type = 2,
+                      greedy_Kmax = 25,
+                      S = s1,
+                      backfit = T)
+plot(flashier_fit_gbcd, 
+     plot_type = &quot;structure&quot;,
+     pm_which = &quot;loadings&quot;, 
+     pm_groups = seurat_object$final_cluster_label,
+     bins = 20, gap = 70)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-9-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/99a79f644ae8345d39138ba78b372b185c13c220/docs/figure/mouse_embryo.Rmd/unnamed-chunk-9-1.png" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/4a0968804299baa24fae6e408049b02025d4d094/docs/figure/mouse_embryo.Rmd/unnamed-chunk-9-1.png" target="_blank">4a09688</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="gbcd" class="section level3">
+<h3>GBCD</h3>
+<pre class="r"><code>res.gbcd &lt;- fit_gbcd(Y = Y, Kmax = 25, maxiter1 = 100,
+                     maxiter2 = 50, maxiter3 = 50, 
+                     prior = flash_ebnm(prior_family = &quot;generalized_binary&quot;,
+                                        scale = 0.04))
+saveRDS(res.gbcd, &quot;../output/mouse_embryo/res.gbcd.rds&quot;)</code></pre>
+</div>
+</div>
+<div id="trying-topic-models" class="section level2">
+<h2>Trying Topic Models</h2>
+<p>Then, let’s try fitting a topic model to this dataset using
+<code>FastTopics</code>.</p>
+<pre class="r"><code>fasttopics_fit &lt;- fit_topic_model(Y, k = 25)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/99a79f644ae8345d39138ba78b372b185c13c220/docs/figure/mouse_embryo.Rmd/unnamed-chunk-14-1.png" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="summarize-structures-from-loadings" class="section level2">
+<h2>Summarize Structures from Loadings</h2>
+<p>There are some interesting structures of the loading based on the
+result of EBMF and FastTopics, that add new insights to the original
+UMAP visualization.</p>
+<div id="non-negative-ebmf-1" class="section level3">
+<h3>Non-negative EBMF</h3>
+<p>First, based on the non-negative EBMF result, there are some factors
+that are unique to certain cell types. For example:</p>
+<ul>
+<li><p>The factor <span class="math inline">\(k9\)</span> (mostly) is
+unique to Endothelial Cells.</p></li>
+<li><p>The factor <span class="math inline">\(k13\)</span> is unique to
+Choroid Plexus.</p></li>
+<li><p>The factor <span class="math inline">\(k15\)</span> is unique to
+White Blood Cells.</p></li>
+</ul>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-1">
+Past versions of unnamed-chunk-15-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/62d57282f521edbfa8d84578be21cc0e92bed41d/docs/figure/mouse_embryo.Rmd/unnamed-chunk-15-1.png" target="_blank">62d5728</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-15-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/99a79f644ae8345d39138ba78b372b185c13c220/docs/figure/mouse_embryo.Rmd/unnamed-chunk-15-1.png" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Shared factors include:</p>
+<ul>
+<li><p>The factor <span class="math inline">\(k2\)</span> is shared
+across Erythroid Progenitors and Hepatocytes.</p></li>
+<li><p>The factors <span class="math inline">\(k3\)</span> and <span
+class="math inline">\(k10\)</span> are shared across multiple types of
+neurons and glial cells.</p></li>
+<li><p>The factor <span class="math inline">\(k4\)</span> is shared
+across Cardiac Muscle lineages and Myocytes.</p></li>
+<li><p>The factor <span class="math inline">\(k7\)</span> is shared
+across Erythroid Progenitors and White Blood Cells.</p></li>
+</ul>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-16-1">
+Past versions of unnamed-chunk-16-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-16-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/62d57282f521edbfa8d84578be21cc0e92bed41d/docs/figure/mouse_embryo.Rmd/unnamed-chunk-16-1.png" target="_blank">62d5728</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-16-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/99a79f644ae8345d39138ba78b372b185c13c220/docs/figure/mouse_embryo.Rmd/unnamed-chunk-16-1.png" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="semi-negative-ebmf" class="section level3">
+<h3>Semi-negative EBMF</h3>
+<p>The loadings from the semi-negative EBMF are more diverse, where each
+cell is composed of a larger number of factors. However, there are still
+both “unique” and “shared” factors across different cell types. For
+examples:</p>
+<p>Specific factors include <span class="math inline">\(k3\)</span>,
+<span class="math inline">\(k12\)</span>, <span
+class="math inline">\(k14\)</span>, <span
+class="math inline">\(k16\)</span>, <span
+class="math inline">\(k19\)</span>, <span
+class="math inline">\(k23\)</span>:</p>
+<ul>
+<li><p>Factor <span class="math inline">\(k3\)</span> is (mostly) unique
+to Myocytes.</p></li>
+<li><p>Factor <span class="math inline">\(k12\)</span> is (mostly)
+unique to Chondrocytes (also appears in Connective Tissue
+Progenitors).</p></li>
+<li><p>Factor <span class="math inline">\(k14\)</span> is unique to
+Hepatocytes.</p></li>
+<li><p>Factor <span class="math inline">\(k16\)</span> is unique to
+Cardiac Muscle lineages.</p></li>
+<li><p>Factor <span class="math inline">\(k19\)</span> is unique to
+Choroid Plexus.</p></li>
+<li><p>Factor <span class="math inline">\(k23\)</span> is unique to
+White Blood Cells.</p></li>
+</ul>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-17-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/99a79f644ae8345d39138ba78b372b185c13c220/docs/figure/mouse_embryo.Rmd/unnamed-chunk-17-1.png" target="_blank">99a79f6</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Shared factors include <span class="math inline">\(k2\)</span>, <span
+class="math inline">\(k4\)</span>, <span
+class="math inline">\(k9\)</span>, <span
+class="math inline">\(k11\)</span>:</p>
+<ul>
+<li><p>Factor <span class="math inline">\(k2\)</span> is shared across
+Erythroid Progenitors and Hepatocytes.</p></li>
+<li><p>Factor <span class="math inline">\(k4\)</span> (as well as <span
+class="math inline">\(k11\)</span>) is shared across multiple types of
+neurons and glial cells.</p></li>
+<li><p>Factor <span class="math inline">\(k9\)</span> is shared across
+some clusters of the white blood cells and Erythroid cells.</p></li>
+</ul>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-18-1">
+Past versions of unnamed-chunk-18-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-18-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-18-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="fasttopics" class="section level3">
+<h3>FastTopics</h3>
+<p>The result from FastTopics looks quite similar to the semi-negative
+EBMF, where each cell is composed of a larger number of factors.</p>
+<p>For examples, some shared factors include:</p>
+<ul>
+<li><p>Factor <span class="math inline">\(k3\)</span> is shared between
+Erythroid Lineage and Hepatocytes.</p></li>
+<li><p>Factor <span class="math inline">\(k7\)</span> is shared between
+Peripheral Neuron and Schwann Cells.</p></li>
+<li><p>Factors <span class="math inline">\(k10\)</span> is shared
+between Developing Guts and Epithelial Cells.</p></li>
+<li><p>Factor <span class="math inline">\(k13\)</span> is shared between
+Erythroid Progenitors, Hepatocytes and White blood cells.</p></li>
+<li><p>Factor <span class="math inline">\(k15\)</span> is shared between
+Chondrocytes and Connective Tissue Progenitors.</p></li>
+<li><p>Factor <span class="math inline">\(k16\)</span> is shared between
+Glial cells and Peripheral Neuron.</p></li>
+</ul>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-19-1">
+Past versions of unnamed-chunk-19-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-19-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-19-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>For unique factors, we can see:</p>
+<ul>
+<li><p>Factor <span class="math inline">\(k4\)</span> is (mostly) unique
+to Myocytes.</p></li>
+<li><p>Factor <span class="math inline">\(k5\)</span> is (mostly) unique
+to Neuron.</p></li>
+<li><p>Factor <span class="math inline">\(k8\)</span> is unique to White
+Blood Cells.</p></li>
+<li><p>Factor <span class="math inline">\(k9\)</span> is unique to
+Endothelial Cells.</p></li>
+<li><p>Factor <span class="math inline">\(k14\)</span> is unique to
+Neuron.</p></li>
+<li><p>Factor <span class="math inline">\(k18\)</span> is unique to
+Cardiac Muscle lineages.</p></li>
+</ul>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-20-1">
+Past versions of unnamed-chunk-20-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-20-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/5c65d9b3dc2df901ef7447ab8ce61f0a95427b89/docs/figure/mouse_embryo.Rmd/unnamed-chunk-20-1.png" target="_blank">5c65d9b</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="compare-these-methods" class="section level2">
+<h2>Compare these methods</h2>
+<ul>
+<li><p>The non-negative EBMF provides a kind of “cleaner composition” of
+each cell, where each cell is mostly composed of one base line factor
+and another factor that is ” kind of specific” to the cell type. This in
+a way demonstrates the advantage of the part-based representation (plus
+sparsity).</p></li>
+<li><p>The semi non-negative EBMF provides a more “diverse” composition
+of each cell, where each cell is composed of a base line factor and
+multiple other factors that may appear in different cell types. The
+compensate of the “diversity” is the computation of this problem tends
+to be a bit more stable than the non-negative EBMF.</p></li>
+<li><p>The FastTopics also provides a kind of diverse composition of
+each cell, where each cell is composed of multiple factors. This might
+be due to there is no sparsity constraint in the FastTopics
+model.</p></li>
+<li><p>Overall, they all found some quite interesting structures (shared
+or unique) that are not obvious from the original UMAP
+visualization.</p></li>
+</ul>
+<p>At the same time, non-negative EBMF also has smaller number of
+“interpretable” factors compared to the semi-negative EBMF and
+FastTopics. For example, if we count the number of factors that appear
+(with loading value greater than say 1e-10) at least in <span
+class="math inline">\(10\)</span> cells, we have:</p>
+<pre class="r"><code>nn_factors &lt;- colSums(abs(flashier_fit_nn$L_pm) &gt; 1e-10) &gt; 10
+table(nn_factors)</code></pre>
+<pre><code>nn_factors
+FALSE  TRUE 
+    6    19 </code></pre>
+<pre class="r"><code>semi_factors &lt;- colSums(abs(flashier_fit_semi$L_pm) &gt; 1e-10) &gt; 10
+table(semi_factors)</code></pre>
+<pre><code>semi_factors
+TRUE 
+  25 </code></pre>
+<pre class="r"><code>ft_factors &lt;- colSums(abs(fasttopics_fit$L) &gt; 1e-10) &gt; 10
+table(ft_factors)</code></pre>
+<pre><code>ft_factors
+TRUE 
+  25 </code></pre>
+<p>This is a good thing if we want factors and loadings with very clear
+interpretation. However, it might also lead to a loss of information for
+some more subtle structures in the data.</p>
+</div>
+<div id="more-detailed-exploration-of-nn-ebmf" class="section level2">
+<h2>More detailed exploration of NN-EBMF</h2>
+<pre class="r"><code>gene_ids &lt;- rownames(flashier_fit_nn$F_pm)
+res &lt;- ldf(flashier_fit_nn, type = &quot;i&quot;)
+F &lt;- with(res, F %*% diag(D))
+# let&#39;s make the gene names more readable
+# gene_ids &lt;- gsub(&quot;\\..*&quot;, &quot;&quot;, gene_ids)
+rownames(flashier_fit_nn$F_pm) &lt;- gene_ids</code></pre>
+<p>For now, let’s focus on the result from the non-negative EBMF. First,
+let’s take a look at the structure plot of each factor from nn-EBMF. To
+make the visualization more clear, we only show the top 4 genes that
+contribute the most to each factor.</p>
+<pre class="r"><code>factor_of_interest &lt;- c(2, 3, 9, 13, 15)
+top_genes_mat &lt;- apply(F, 2, order, decreasing = TRUE)[1:4, factor_of_interest]
+top_genes &lt;- unique(rownames(flashier_fit_nn$F_pm)[top_genes_mat])
+plot(flashier_fit_nn,
+     plot_type = &quot;heatmap&quot;,
+     pm_which = &quot;factors&quot;,
+     pm_subset = top_genes,
+     pm_groups = factor(top_genes, levels = rev(top_genes)),
+     kset = factor_of_interest,
+     gap = 0.2)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-23-1">
+Past versions of unnamed-chunk-23-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-23-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/62d57282f521edbfa8d84578be21cc0e92bed41d/docs/figure/mouse_embryo.Rmd/unnamed-chunk-23-1.png" target="_blank">62d5728</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2024-11-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>For the factor <code>k2</code> that is shared across Erythroid
+Progenitors and Hepatocytes, the leading gene is ENSMUSG00000052305,
+which corresponds to the Hbb-bs gene in Mus musculus (mouse), encoding
+the hemoglobin, beta adult s chain. This gene is a part of the
+beta-globin cluster and plays a crucial role in oxygen transport from
+the lungs to peripheral tissues. It is predominantly expressed in
+tissues involved in hematopoiesis. It is reasonable that this gene is
+highly expressed in Erythroid Progenitors.</p>
+<p>For the factor <code>k3</code> that is shared across multiple types
+of neurons and glial cells, the leading gene is ENSMUSG00000072235.
+ENSMUSG00000072235, corresponds to Tuba1a, encoding the alpha tubulin
+protein in Mus musculus (mouse). This gene is known for its ubiquitous
+expression, with particularly high levels in brain and lungs.</p>
+<p>For the factor <code>k9</code> that is unique to Endothelial Cells,
+the leading gene is ENSMUSG00000031502, which corresponds to the Col4a1
+gene in Mus musculus (mouse), encoding the collagen, type IV, alpha 1
+protein. This protein is a crucial component of the basement
+membrane.</p>
+<p>For the factor <code>k13</code> that is unique to Choroid Plexus, the
+leading gene is ENSMUSG00000061808. It corresponds to the Ttr gene in
+Mus musculus (mouse), encoding the protein transthyretin, a transport
+protein primarily involved in the distribution of the thyroid hormone
+thyroxine and retinol (vitamin A). It is predominantly synthesized in
+the liver and the choroid plexus of the brain.</p>
+<p>For the factor <code>k15</code> that is unique to White Blood Cells,
+the leading gene is ENSMUSG00000049744, which corresponds to the
+ArhGAP15 gene in Mus musculus (mouse), encoding the Rho
+GTPase-activating protein 15. Existing literature has reported that
+“Knock-out of Arhgap15 function demonstrates that this gene is required
+to regulate multiple functions in macrophages and neutrophils.”</p>
+</div>
+<div id="exploring-spatial-pattern-of-factors" class="section level2">
+<h2>Exploring Spatial Pattern of Factors</h2>
+<p>Finally, let’s explore the spatial pattern of these factors in the
+mouse embryo.</p>
+<pre class="r"><code>L &lt;- flashier_fit_nn$L_pm
+locations &lt;- data.frame(x = seurat_object$coords.x1, y = seurat_object$coords.x2)</code></pre>
+<p>These locations are collected from 14 different slides. Let’s focus
+on the slide 14 for now.</p>
+<pre class="r"><code>locationsdf &lt;- locations
+locationsdf$x &lt;- locationsdf$x + runif(nrow(locationsdf), -8, 8)
+locationsdf$y &lt;- locationsdf$y + runif(nrow(locationsdf), -8, 8)
+locationsdf$slideID &lt;- seurat_object$slide_id
+locationsdf$annotation &lt;- as.factor(seurat_object$anatomical_annotation)
+locationsdf$celltype &lt;- as.factor(seurat_object$final_cluster_label)
+locationsdf %&gt;%
+  filter(slideID == &quot;Slide 14&quot;) %&gt;%
+  ggplot(aes(x = x, y = y, colour = (annotation))) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  theme_minimal()</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/plotting_slide14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-plotting_slide14-1">
+Past versions of plotting_slide14-1.png
+</button>
+</p>
+<div id="fig-plotting_slide14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/9e347ddd2ead134aeee99a6a393b5f90e0a3c59b/docs/figure/mouse_embryo.Rmd/plotting_slide14-1.png" target="_blank">9e347dd</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>locationsdf %&gt;%
+  filter(slideID == &quot;Slide 14&quot;) %&gt;%
+  ggplot(aes(x = x, y = y, colour = (celltype))) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  theme_minimal()</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/plotting_slide14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-plotting_slide14-2">
+Past versions of plotting_slide14-2.png
+</button>
+</p>
+<div id="fig-plotting_slide14-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/9e347ddd2ead134aeee99a6a393b5f90e0a3c59b/docs/figure/mouse_embryo.Rmd/plotting_slide14-2.png" target="_blank">9e347dd</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plots &lt;- list()
+slideID &lt;- seurat_object$slide_id == &quot;Slide 14&quot;
+selected_factors &lt;- which(order(flashier_fit_nn$pve, decreasing = T) %in% c(1:9))
+
+for (f in selected_factors) {
+  p &lt;- plot_loadings_on_locations(locations = locations, loading = L, factor_num = f, size = 1, which_to_plot = slideID)
+  plots[[length(plots) + 1]] &lt;- ggplotGrob(p)
+}
+# Combine the plots in a 2x3 grid
+combined_plot &lt;- wrap_plots(plots, ncol = 3, nrow = 3)
+
+# Display the combined plot
+print(combined_plot)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/plotting_slide14_factors-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-plotting_slide14_factors-1">
+Past versions of plotting_slide14_factors-1.png
+</button>
+</p>
+<div id="fig-plotting_slide14_factors-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/9e347ddd2ead134aeee99a6a393b5f90e0a3c59b/docs/figure/mouse_embryo.Rmd/plotting_slide14_factors-1.png" target="_blank">9e347dd</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>L &lt;- flashier_fit_semi$L_pm
+slideID &lt;- seurat_object$slide_id == &quot;Slide 14&quot;
+selected_factors &lt;- which(order(flashier_fit_semi$pve, decreasing = T) %in% c(1:9))
+plots &lt;- list()
+for (f in selected_factors) {
+  p &lt;- plot_loadings_on_locations(locations = locations, loading = L, factor_num = f, size = 1, which_to_plot = slideID)
+  plots[[length(plots) + 1]] &lt;- ggplotGrob(p)
+}
+# Combine the plots in a 2x3 grid
+combined_plot &lt;- wrap_plots(plots, ncol = 3, nrow = 3)
+
+# Display the combined plot
+print(combined_plot)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/plotting_slide14_factors_semi-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-plotting_slide14_factors_semi-1">
+Past versions of plotting_slide14_factors_semi-1.png
+</button>
+</p>
+<div id="fig-plotting_slide14_factors_semi-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/9e347ddd2ead134aeee99a6a393b5f90e0a3c59b/docs/figure/mouse_embryo.Rmd/plotting_slide14_factors_semi-1.png" target="_blank">9e347dd</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code># fasttopics_fit &lt;- readRDS(&quot;../output/mouse_embryo/fasttopics_fit.rds&quot;)
+L &lt;- fasttopics_fit$L
+slideID &lt;- seurat_object$slide_id == &quot;Slide 14&quot;
+selected_factors &lt;- c(1:9)
+plots &lt;- list()
+for (f in selected_factors) {
+  p &lt;- plot_loadings_on_locations(locations = locations, loading = L, factor_num = f, size = 1, which_to_plot = slideID)
+  plots[[length(plots) + 1]] &lt;- ggplotGrob(p)
+}
+# Combine the plots in a 2x3 grid
+combined_plot &lt;- wrap_plots(plots, ncol = 3, nrow = 3)
+
+# Display the combined plot
+print(combined_plot)</code></pre>
+<p><img src="figure/mouse_embryo.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-24-1">
+Past versions of unnamed-chunk-24-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-24-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephenslab/single-cell-jamboree/blob/9e347ddd2ead134aeee99a6a393b5f90e0a3c59b/docs/figure/mouse_embryo.Rmd/unnamed-chunk-24-1.png" target="_blank">9e347dd</a>
+</td>
+<td>
+Ziang Zhang
+</td>
+<td>
+2025-01-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.3.1 (2023-06-16)
+Platform: aarch64-apple-darwin20 (64-bit)
+Running under: macOS Monterey 12.7.4
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] lubridate_1.9.3     forcats_1.0.0       stringr_1.5.1      
+ [4] dplyr_1.1.4         purrr_1.0.2         readr_2.1.5        
+ [7] tidyr_1.3.1         tibble_3.2.1        tidyverse_2.0.0    
+[10] fastTopics_0.6-192  gridExtra_2.3       ggpubr_0.6.0       
+[13] Biobase_2.62.0      BiocGenerics_0.48.1 RColorBrewer_1.1-3 
+[16] cowplot_1.1.3       patchwork_1.3.0     ggplot2_3.5.1      
+[19] flashier_1.0.54     ebnm_1.1-34         data.table_1.16.2  
+[22] Matrix_1.6-4        Seurat_5.1.0        SeuratObject_5.0.2 
+[25] sp_2.1-4           
+
+loaded via a namespace (and not attached):
+  [1] RcppAnnoy_0.0.22       splines_4.3.1          later_1.3.2           
+  [4] polyclip_1.10-7        fastDummies_1.7.4      lifecycle_1.0.4       
+  [7] mixsqp_0.3-54          rstatix_0.7.2          rprojroot_2.0.4       
+ [10] globals_0.16.3         lattice_0.22-6         MASS_7.3-60           
+ [13] backports_1.5.0        magrittr_2.0.3         plotly_4.10.4         
+ [16] sass_0.4.9             rmarkdown_2.28         jquerylib_0.1.4       
+ [19] yaml_2.3.10            httpuv_1.6.15          sctransform_0.4.1     
+ [22] spam_2.11-0            spatstat.sparse_3.1-0  reticulate_1.39.0     
+ [25] pbapply_1.7-2          abind_1.4-8            Rtsne_0.17            
+ [28] quadprog_1.5-8         git2r_0.33.0           ggrepel_0.9.6         
+ [31] irlba_2.3.5.1          listenv_0.9.1          spatstat.utils_3.1-0  
+ [34] goftest_1.2-3          RSpectra_0.16-2        spatstat.random_3.3-2 
+ [37] fitdistrplus_1.2-1     parallelly_1.38.0      leiden_0.4.3.1        
+ [40] codetools_0.2-20       tidyselect_1.2.1       farver_2.1.2          
+ [43] matrixStats_1.4.1      spatstat.explore_3.3-3 jsonlite_1.8.9        
+ [46] progressr_0.14.0       Formula_1.2-5          ggridges_0.5.6        
+ [49] survival_3.7-0         tools_4.3.1            progress_1.2.3        
+ [52] ica_1.0-3              Rcpp_1.0.13-1          glue_1.8.0            
+ [55] xfun_0.48              withr_3.0.2            fastmap_1.2.0         
+ [58] fansi_1.0.6            digest_0.6.37          truncnorm_1.0-9       
+ [61] timechange_0.3.0       R6_2.5.1               mime_0.12             
+ [64] colorspace_2.1-1       scattermore_1.2        gtools_3.9.5          
+ [67] tensor_1.5             spatstat.data_3.1-2    RhpcBLASctl_0.23-42   
+ [70] utf8_1.2.4             generics_0.1.3         prettyunits_1.2.0     
+ [73] httr_1.4.7             htmlwidgets_1.6.4      scatterplot3d_0.3-44  
+ [76] deconvolveR_1.2-1      whisker_0.4.1          uwot_0.1.16           
+ [79] pkgconfig_2.0.3        gtable_0.3.6           workflowr_1.7.1       
+ [82] lmtest_0.9-40          htmltools_0.5.8.1      carData_3.0-5         
+ [85] dotCall64_1.2          horseshoe_0.2.0        scales_1.3.0          
+ [88] png_0.1-8              spatstat.univar_3.0-1  ashr_2.2-66           
+ [91] knitr_1.48             rstudioapi_0.16.0      tzdb_0.4.0            
+ [94] reshape2_1.4.4         nlme_3.1-166           cachem_1.1.0          
+ [97] zoo_1.8-12             Polychrome_1.5.1       KernSmooth_2.23-24    
+[100] parallel_4.3.1         miniUI_0.1.1.1         softImpute_1.4-1      
+[103] pillar_1.9.0           grid_4.3.1             vctrs_0.6.5           
+[106] RANN_2.6.2             promises_1.3.0         car_3.1-3             
+[109] xtable_1.8-4           cluster_2.1.6          evaluate_1.0.1        
+[112] invgamma_1.1           cli_3.6.3              compiler_4.3.1        
+[115] rlang_1.1.4            crayon_1.5.3           SQUAREM_2021.1        
+[118] future.apply_1.11.2    ggsignif_0.6.4         labeling_0.4.3        
+[121] plyr_1.8.9             fs_1.6.4               stringi_1.8.4         
+[124] viridisLite_0.4.2      deldir_2.0-4           munsell_0.5.1         
+[127] lazyeval_0.2.2         spatstat.geom_3.3-3    RcppHNSW_0.6.0        
+[130] hms_1.1.3              future_1.34.0          shiny_1.9.1           
+[133] highr_0.11             trust_0.1-8            ROCR_1.0-11           
+[136] igraph_2.1.2           broom_1.0.7            RcppParallel_5.1.9    
+[139] bslib_0.8.0           </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
