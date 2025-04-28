@@ -1,0 +1,81 @@
+---
+title: "Run flashier on Autoimmune GWAS data"
+output: workflowr::wflow_html
+author: "Zining Qi"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tools)
+library(Matrix)
+#library(NNLM)
+library(fastTopics)
+library(flashier)
+load("../data/beta_matrix.RData")
+```
+
+## Overview of Multi-trait data
+
+```{r}
+head(beta_matrix)
+Y <- as.matrix(beta_matrix)
+```
+
+Rows are variants and columns are trait, i.e. autoimmune disease.
+
+
+## Fit an semi-NMF using flashier.
+# I initially set var_type = 0 to increase the number of factors discovered.
+
+```{r}
+var_per_trait <- apply(beta_matrix, 2, var, na.rm = TRUE)
+
+# Set a lower bound (e.g., 10% of the smallest observed variance)
+s1 <- 0.1 * min(var_per_trait, na.rm = TRUE)
+```
+
+
+```{r}
+t0 <- proc.time()
+fl0 <- flash(Y,ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential),
+             var_type = 0,
+             greedy_Kmax = 40,nullcheck = FALSE,backfit = FALSE,
+             verbose = 3)
+fl_snmf <- flash_init(Y,var_type = 2,S = s1)
+fl_snmf <- flash_factors_init(fl_snmf,fl0,ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential))
+fl_snmf <- flash_backfit(fl_snmf,extrapolate = FALSE,maxiter = 100,verbose = 3)
+fl_snmf <- flash_backfit(fl_snmf,extrapolate = TRUE,maxiter = 100,verbose = 3)
+t1 <- proc.time()
+timings$fl_snmf <- t1 - t0
+print(timings$fl_snmf)
+```
+
+
+## Fit an Laplace MF using flashier.
+# I initially set var_type = 0 to increase the number of factors discovered.
+
+```{r}
+t0 <- proc.time()
+fl0 <- flash(Y,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
+             var_type = 0,
+             greedy_Kmax = 40,nullcheck = FALSE,backfit = FALSE,
+             verbose = 3)
+fl_mf <- flash_init(Y,var_type = 2,S = s1)
+fl_mf <- flash_factors_init(fl_mf,fl0,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace))
+fl_mf <- flash_backfit(fl_mf,extrapolate = FALSE,maxiter = 100,verbose = 3)
+fl_mf <- flash_backfit(fl_mf,extrapolate = TRUE,maxiter = 100,verbose = 3)
+t1 <- proc.time()
+timings$fl_mf <- t1 - t0
+print(timings$fl_mf)
+```
+
+
+
+
+
+
+
+
+
+
