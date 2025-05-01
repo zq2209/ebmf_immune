@@ -60,11 +60,12 @@ combined_results <- bind_rows(results_list)
 duplicate_report <- list()
 
 for (file in files[c(-12, -13)]) {
-  gwas_data <- fread(file, select = c("variant_id", "beta"))
+  gwas_data <- fread(file, select = c("variant_id", "beta", 'standard_error'))
   
   filtered_data <- gwas_data %>% 
     filter(variant_id %in% common_variants) %>%
-    mutate(source = gsub("\\.h\\.tsv$", "", file))
+    mutate(source = gsub("\\.h\\.tsv$", "", file)) %>% 
+    mutate(z_hat = beta / standard_error)
   
   # Identify duplicates
   dup_variants <- filtered_data$variant_id[duplicated(filtered_data$variant_id)]
@@ -84,8 +85,12 @@ for (file in files[c(-12, -13)]) {
 
 ```{r}
 combined_results <- bind_rows(results_list)
+save(combined_results, file = 'autoimmune_combined_results.RData')
+```
 
+```{r}
 # Map source file names to its disease
+load('../data/autoimmune_combined_results.RData')
 
 study_to_disease <- data.frame(
   source = c("20190752-GCST000612-EFO_0001060",
@@ -114,6 +119,58 @@ study_to_disease <- data.frame(
 
 # Merge with your results
 combined_results <- merge(combined_results, study_to_disease, by = "source", all.x = TRUE)
+```
+
+Plot distribution of $ \hat{\beta} $
+
+```{r}
+ggplot(combined_results, aes(x = beta)) +
+  geom_histogram(binwidth = 0.01, fill = "#21908CFF", color = "black") +
+  theme_minimal() +
+  labs(#title = "Distribution of Beta",
+       x = expression(hat(beta)),
+       y = "Count")
+```
+
+Plot distribution of $ \hat{\beta} $ by traits
+
+```{r}
+ggplot(combined_results, aes(x = beta)) +
+  geom_histogram(binwidth = 0.03, fill = "#21908CFF", color = "black") +
+  facet_wrap(~ disease, scales = "free_y") +
+  theme_minimal() +
+  labs(#title = expression("Distribution of " * hat(beta)),
+       x = expression(hat(beta)),
+       y = "Count")
+```
+
+Plot distribution of $\hat{Z} = \hat{\beta} / \text{SE} $
+
+```{r}
+ggplot(combined_results, aes(x = z_hat)) +
+  geom_histogram(binwidth = 1, fill = "#21908CFF", color = "black") +
+  theme_minimal() +
+  labs(#title = expression("Distribution of " * hat(Z)),
+       x = expression(hat(Z)),
+       y = "Count")
+```
+
+
+Plot distribution of $\hat{Z} = \hat{\beta} / \text{SE} $ by traits
+
+```{r}
+ggplot(combined_results, aes(x = z_hat)) +
+  geom_histogram(binwidth = 1, fill = "#21908CFF", color = "black") +
+  facet_wrap(~ disease, scales = "free_y") +
+  theme_minimal() +
+  labs(#title = expression("Distribution of " * hat(Z) * " by trait"),
+       x = expression(hat(Z)),
+       y = "Count")
+```
+
+
+
+```{r}
 
 # Reshape to wide format if desired (one column per study)
 beta_matrix <- combined_results %>%

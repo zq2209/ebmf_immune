@@ -82,6 +82,8 @@ save(fl_mf_ldf, file = "output/immune_mf_factors.RData" )
 
 ## Explore factors identified
 
+### Explore factors by traits
+
 ```{r}
 load("../output/immune_mf_factors.RData")
 load("../output/immune_snmf_factors.RData")
@@ -313,12 +315,89 @@ F <- fl_mf_ldf$F
 
 p <- plot_factors(F, row_names = rownames(F), col_names = paste0("k", 1:ncol(F))) +
      scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = "Normalized\nEffect") +
-     xlab("Mediator") +
+     xlab("Factors") +
      ggtitle("Factor") +
      scale_x_discrete(position = "top")+
      theme(axis.text.x = element_text(angle = 0),
            panel.background = element_rect(fill = "white"),
            axis.ticks = element_blank())
 p
+```
+
+
+### Explore factors by affected system
+
+```{r}
+F <- fl_snmf_ldf$F
+
+affected_system <- c('gastrointestinal', 'Skin', 'joints_muscles', 'spine_sacroiliac_joints', 'nervous', 'gastrointestinal', 'gastrointestinal', 'gastrointestinal', 'multiple', 'nervous', 'Eedocrine_glands')
+
+affected_system <- factor(affected_system, 
+                          c('gastrointestinal', 'Skin', 'joints_muscles', 'spine_sacroiliac_joints', 
+                            'nervous', 'multiple', 'Eedocrine_glands'))
+
+p1 <- fastTopics::structure_plot(F,topics = c(1:ncol(F)),grouping = affected_system,
+                     #gap = 1,perplexity = 70,
+                     n = 500) +
+  labs(y = "membership",title = "factors",
+       fill = "factor",color = "factor")
+```
+
+
+```{r}
+F <- fl_mf_ldf$F
+
+p2 <- fastTopics::structure_plot(F,topics = c(1:ncol(F)),grouping = affected_system,
+                     #gap = 1,perplexity = 70,
+                     n = 500) +
+  labs(y = "membership",title = "factors",
+       fill = "factor",color = "factor")
+```
+
+
+```{r}
+traits <- rownames(F)
+
+affected_system <- c(
+  "gastrointestinal", "Skin", "joints_muscles", 
+  "spine_sacroiliac_joints", "nervous", 
+  "gastrointestinal", "gastrointestinal", 
+  "gastrointestinal", "multiple", 
+  "nervous", "endocrine_glands"
+)
+
+
+```
+
+
+```{r}
+affected_system_df <- data.frame(Groups=affected_system)
+rownames(affected_system_df) <- rownames(F)
+colnames(F) <- paste0("k", 1:ncol(F))
+
+trait_order <- order(affected_system_df$Groups)
+F_ordered <- F[trait_order, ]
+affected_system_df_ordered <- affected_system_df[trait_order, , drop = FALSE]
+
+# Choose a palette or assign custom colors
+group_levels <- unique(affected_system_df_ordered$Groups)
+group_colors <- setNames(
+  viridis(length(group_levels), option = "D"),
+  group_levels
+)
+
+# Create the annotation_colors list
+ann_colors <- list(Groups = group_colors)
+
+
+
+pheatmap(F_ordered, cluster_cols = FALSE, scale = 'row', cluster_rows = FALSE,
+            annotation_row = affected_system_df_ordered,
+            show_colnames = FALSE,
+            border_color = "white",
+            colorRampPalette(c("#440154FF", "white", "#21908CFF"))(75),
+            annotation_colors = ann_colors
+            #gaps_col = cumsum(c(5,5))
+)
 ```
 
