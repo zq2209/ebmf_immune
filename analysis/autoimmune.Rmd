@@ -6,17 +6,25 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+The aim of this analysis is to take an initial look at the autoimmune disease GWAS data set that were published in [GWAS Catelog][https://www.ebi.ac.uk/gwas/], and prepare the data in a convenient form for subsequent analyses in R.
+
+The detailed overview of all autoimuune disease used in this analysis refers to [here.][https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0]
+
+First, load the packages needed for this analysis. Note that MatrixExtra is also used in one of the steps below
+
+```{r knitr-opts, include=FALSE}
+knitr::opts_chunk$set(comment = "#",collapse = TRUE,results = "hold",
+                      fig.align = "center",dpi = 120)
+```
+
+```{r load-pkgs, message=FALSE}
 library(tidyverse)
+library(data.table)
 ```
 
 First, we extract overlap variants in these autoimmune disease GWAS data
 
 ```{r}
-# Load libraries (install if needed)
-library(data.table)
-
 # List all .h.tsv files
 files <- list.files(pattern = "\\.h\\.tsv$")
 
@@ -37,7 +45,7 @@ cat("Final overlapping variants:", length(common_variants))
 
 Then, we select these common variants and there corresponding effect sizes in each disease. 
 
-```{r}
+```{r, eval=FALSE}
 results_list <- list()
 
 # Loop through each file and extract the common variants
@@ -56,7 +64,7 @@ combined_results <- bind_rows(results_list)
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 duplicate_report <- list()
 
 for (file in files[c(-12, -13)]) {
@@ -81,14 +89,13 @@ for (file in files[c(-12, -13)]) {
   # Keep only first occurrence
   results_list[[file]] <- filtered_data[!duplicated(filtered_data$variant_id), ]
 }
-```
 
-```{r}
 combined_results <- bind_rows(results_list)
-save(combined_results, file = 'autoimmune_combined_results.RData')
 ```
 
-```{r}
+Map file name to corresponding disease. 
+
+```{r, eval=FALSE}
 # Map source file names to its disease
 load('../data/autoimmune_combined_results.RData')
 
@@ -119,9 +126,10 @@ study_to_disease <- data.frame(
 
 # Merge with your results
 combined_results <- merge(combined_results, study_to_disease, by = "source", all.x = TRUE)
+save(combined_results, file = 'autoimmune_combined_results.RData')
 ```
 
-Plot distribution of $ \hat{\beta} $
+After combining all gwas effect sizes into one dataset, we plot distribution of $ \hat{\beta} $
 
 ```{r}
 ggplot(combined_results, aes(x = beta)) +
@@ -168,7 +176,7 @@ ggplot(combined_results, aes(x = z_hat)) +
        y = "Count")
 ```
 
-
+Finally, convert the long table to wide table that rows are variants and columns are traits. 
 
 ```{r}
 
@@ -188,6 +196,26 @@ fwrite(beta_matrix, row.names = TRUE,
 ```
 
 
+```{r}
+pheatmap(beta_matrix, cluster_cols = FALSE, scale = 'row', cluster_rows = FALSE,
+            #annotation_row = affected_system_df_ordered,
+            show_colnames = TRUE,
+            show_rownames = FALSE,
+            #border_color = "white",
+            colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100),
+            #annotation_colors = ann_colors
+            #gaps_col = cumsum(c(5,5))
+)
+
+plot_factors(beta_matrix, col_names = colnames(beta_matrix)) +
+     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = expression(beta)) +
+     xlab("Trait") +
+     ggtitle("") +
+     scale_x_discrete(position = "top")+
+     theme(axis.text.x = element_text(angle = 0),
+           panel.background = element_rect(fill = "white"),
+           axis.ticks = element_blank())
+```
 
 
 

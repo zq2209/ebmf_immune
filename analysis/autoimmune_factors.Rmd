@@ -299,7 +299,7 @@ plot_factors <- function(x, row_names, col_names, row_order, col_order,
 F <- fl_snmf_ldf$F
 
 p <- plot_factors(F, row_names = rownames(F), col_names = paste0("k", 1:8)) +
-     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = "Normalized\nEffect") +
+     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = "Factor Effect") +
      xlab("Mediator") +
      ggtitle("Factor") +
      scale_x_discrete(position = "top")+
@@ -314,7 +314,7 @@ p
 F <- fl_mf_ldf$F
 
 p <- plot_factors(F, row_names = rownames(F), col_names = paste0("k", 1:ncol(F))) +
-     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = "Normalized\nEffect") +
+     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = "Factor Effect") +
      xlab("Factors") +
      ggtitle("Factor") +
      scale_x_discrete(position = "top")+
