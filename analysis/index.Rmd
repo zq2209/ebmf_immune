@@ -1,10 +1,10 @@
 ---
-title: Autoimmune Disease Matrix Factorization Analysis
+title: Autoimmune Disease Matrix Factorization
 site: workflowr::wflow_site
 output: workflowr::wflow_html
 ---
 
-See [here][] for an overview of GWAS data information
+See [here][https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0] for an overview of GWAS data information
 
 
 

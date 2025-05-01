@@ -1,13 +1,13 @@
-name: single-cell jamboree
+name: ebmf_immune
 output_dir: ../docs
 navbar:
-  title: single-cell jamboree
+  title: ebmf_immune
   left:
     - text: Overview
       href: index.html
   right:
     - text: source
-      href: https://github.com/stephenslab/single-cell-jamboree
+      href: https://github.com/zq2209/ebmf_immune
 output:
   workflowr::wflow_html:
     toc: no
