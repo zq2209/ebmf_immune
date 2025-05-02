@@ -59,6 +59,13 @@ writeLines(common_variants, "common_variant_ids.txt")
 cat("Final number of overlapping variants:", length(common_variants))
 ```
 
+Final number of overlapping variants are over 18000. Two traits were dropped because the overlapping of these two traits will be too low. 
+
+**Fixme**: 
+
+1. The number of overlapping is low?
+2. No stringent processing on variants now, such as no MAF filter, harmonized of effects. 
+
 ### Extract Effect Sizes for Common Variants
 
 For each study, extract effect sizes ($\beta$) only for the common variants identified in Step 1.
@@ -192,6 +199,13 @@ ggplot(combined_results, aes(x = z_hat)) +
   labs(x = expression(hat(Z)),
        y = "Count")
 ```
+
+
+**Fixme**: 
+
+1. Beta distribution seems normal right now but effect size are small, use z score instead? 
+
+
 
 ### Create Analysis-Ready Matrices
 

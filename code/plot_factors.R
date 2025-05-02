@@ -20,3 +20,66 @@ plot_factors <- function(x, row_names, col_names, row_order, col_order,
     scale_fill_gradient2() +
     theme(axis.text.x = element_text(angle=90))
 }
+
+
+#' Prepare Annotation Data for Heatmap Visualization
+#'
+#' Creates annotation data structures needed for pheatmap with biological system grouping
+#'
+#' @param F A factor matrix (rows = traits, columns = factors)
+#' @param affected_system A character vector specifying biological systems for each trait
+#' @param color_palette A color palette function (default: viridis option "D")
+#' @param factor_prefix Prefix for factor column names (default: "k")
+#'
+#' @return A list containing:
+#'   - F_ordered: The factor matrix ordered by biological system
+#'   - annotation_df: Data frame for pheatmap annotation
+#'   - annotation_colors: Color mapping for pheatmap
+#'   - group_colors: Named vector of group colors
+#'
+#' @examples
+#' # Prepare annotation data
+#' prep <- prepare_annotation_data(F_matrix, affected_systems)
+#' # Use with pheatmap:
+#' pheatmap(prep$F_ordered, annotation_row = prep$annotation_df,
+#'          annotation_colors = prep$annotation_colors)
+plot_factor_annotation_data <- function(F, affected_system,
+                                    color_palette = function(n) viridis::viridis(n, option = "D"),
+                                    factor_prefix = "k") {
+
+  # Input validation
+  if (nrow(F) != length(affected_system)) {
+    stop("Length of affected_system must match number of rows in F")
+  }
+
+  if (!is.matrix(F) && !is.data.frame(F)) {
+    stop("F must be a matrix or data.frame")
+  }
+
+  # Create annotation data frame
+  annotation_df <- data.frame(Groups = affected_system)
+  rownames(annotation_df) <- rownames(F)
+
+  # Add factor names if they don't exist
+  if (is.null(colnames(F))) {
+    colnames(F) <- paste0(factor_prefix, 1:ncol(F))
+  }
+
+  # Order by biological system
+  trait_order <- order(annotation_df$Groups)
+  F_ordered <- F[trait_order, , drop = FALSE]
+  annotation_df_ordered <- annotation_df[trait_order, , drop = FALSE]
+
+  # Create color mapping
+  group_levels <- unique(annotation_df_ordered$Groups)
+  group_colors <- setNames(color_palette(length(group_levels)), group_levels)
+  annotation_colors <- list(Groups = group_colors)
+
+  # Return all components needed for plotting
+  return(list(
+    F_ordered = F_ordered,
+    annotation_df = annotation_df_ordered,
+    annotation_colors = annotation_colors,
+    group_colors = group_colors
+  ))
+}

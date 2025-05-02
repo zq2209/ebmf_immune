@@ -1,361 +1,208 @@
 ---
-title: "Run flashier on Autoimmune GWAS data"
-output: workflowr::wflow_html
+title: "Factor Analysis of Autoimmune GWAS Data using flashier"
 author: "Zining Qi"
-editor_options: 
-  chunk_output_type: console
+output: workflowr::wflow_html
 ---
 
-```{r}
-library(tools)
-library(Matrix)
-#library(NNLM)
-library(fastTopics)
+This analysis applies Empirical Bayes Matrix Factorization methods to genome-wide association study (GWAS) data for multiple autoimmune diseases. We use the `flashier` package to:
+
+1. Perform semi-nonnegative matrix factorization (semi-NMF)
+2. Perform matrix factorization with Laplace priors for both L and F
+3. Compare and visualize the resulting factors
+4. Explore factor-trait relationships by affected biological systems
+
+### Setup
+
+Load required packages and data:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment = "#",
+  collapse = TRUE,
+  results = "hold",
+  fig.align = "center",
+  dpi = 120
+)
+```
+
+```{r load-packages-data}
+# Data manipulation and visualization
+library(tidyverse)
+library(reshape2)
+library(cowplot)
+
+# Matrix factorization tools
 library(flashier)
-library(ggplot2)
+library(fastTopics)
+
+# Load preprocessed GWAS effect size matrix
 load("../data/beta_matrix.RData")
 ```
 
-## Overview of Multi-trait data
+### Data Overview
 
-```{r}
-head(beta_matrix)
+The input data is a matrix of GWAS effect sizes ($\beta$) where:
+
+- Rows represent genetic variants
+- Columns represent autoimmune diseases
+
+```{r view-data}
+# Preview the data structure
+head(beta_matrix[, 1:5])
+
+# Convert to matrix format for flashier
 Y <- as.matrix(beta_matrix)
 ```
 
-Rows are variants and columns are trait, i.e. autoimmune disease.
+## Semi-Nonnegative Matrix Factorization (semi-NMF)
+
+Factorize the effect size matrix into latent factors using semi-NMF, which allows for capturing only same direction of the disease mechanism.
 
 
-## Fit an semi-NMF using flashier.
-# I initially set var_type = 0 to increase the number of factors discovered.
-
-```{r}
+```{r semi-nmf, message=FALSE}
+# Calculate trait-specific variances
 var_per_trait <- apply(beta_matrix, 2, var, na.rm = TRUE)
+s1 <- 0.1 * min(var_per_trait, na.rm = TRUE)  # Set minimum variance threshold
 
-# Set a lower bound (e.g., 10% of the smallest observed variance)
-s1 <- 0.1 * min(var_per_trait, na.rm = TRUE)
-```
+# Initialize timing
+timings <- list()
 
-
-```{r}
+# Run semi-NMF
 t0 <- proc.time()
-fl0 <- flash(Y,ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential),
+fl0 <- flash(Y,
+             ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential),
              var_type = 0,
-             greedy_Kmax = 40,nullcheck = FALSE,backfit = FALSE,
+             greedy_Kmax = 40,
+             nullcheck = FALSE,
+             backfit = FALSE,
              verbose = 3)
-fl_snmf <- flash_init(Y,var_type = 2,S = s1)
-fl_snmf <- flash_factors_init(fl_snmf,fl0,ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential))
-fl_snmf <- flash_backfit(fl_snmf,extrapolate = FALSE,maxiter = 100,verbose = 3)
-fl_snmf <- flash_backfit(fl_snmf,extrapolate = TRUE,maxiter = 100,verbose = 3)
+
+# Refine with proper variance structure
+fl_snmf <- flash_init(Y, var_type = 2, S = s1)
+fl_snmf <- flash_factors_init(fl_snmf, fl0, 
+                            ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential))
+fl_snmf <- flash_backfit(fl_snmf, extrapolate = FALSE, maxiter = 100, verbose = 3)
+fl_snmf <- flash_backfit(fl_snmf, extrapolate = TRUE, maxiter = 100, verbose = 3)
 t1 <- proc.time()
+
+# Record timing
 timings$fl_snmf <- t1 - t0
 print(timings$fl_snmf)
 ```
 
+### Matrix Factorization with Laplace Priors
 
-## Fit an Laplace MF using flashier.
-# I initially set var_type = 0 to increase the number of factors discovered.
+Decompose the matrix using Laplace priors for both loadings and factors, which encourages capturing both positive and negative direction of the disease mechanism.
 
-```{r}
+```{r laplace-mf, message=FALSE}
 t0 <- proc.time()
-fl0_mf <- flash(Y,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
-             var_type = 0,
-             greedy_Kmax = 40,nullcheck = FALSE,backfit = FALSE,
-             verbose = 3)
-fl_mf <- flash_init(Y,var_type = 2,S = s1)
-fl_mf <- flash_factors_init(fl_mf,fl0_mf,ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace))
-fl_mf <- flash_backfit(fl_mf,extrapolate = FALSE,maxiter = 100,verbose = 3)
-fl_mf <- flash_backfit(fl_mf,extrapolate = TRUE,maxiter = 100,verbose = 3)
+fl0_mf <- flash(Y,
+                ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
+                var_type = 0,
+                greedy_Kmax = 40,
+                nullcheck = FALSE,
+                backfit = FALSE,
+                verbose = 3)
+
+# Refine with proper variance structure
+fl_mf <- flash_init(Y, var_type = 2, S = s1)
+fl_mf <- flash_factors_init(fl_mf, fl0_mf, 
+                          ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace))
+fl_mf <- flash_backfit(fl_mf, extrapolate = FALSE, maxiter = 100, verbose = 3)
+fl_mf <- flash_backfit(fl_mf, extrapolate = TRUE, maxiter = 100, verbose = 3)
 t1 <- proc.time()
+
+# Record timing
 timings$fl_mf <- t1 - t0
 print(timings$fl_mf)
 ```
 
+Save the factor loadings for downstream analysis.
 
-```{r}
-fl_mf_ldf   <- ldf(fl_mf,type = "i")
-fl_snmf_ldf  <- ldf(fl_snmf,type = "i")
+```{r save-factors, eval=FALSE}
+# Extract and save factor loadings
+fl_mf_ldf <- ldf(fl_mf, type = "i")
+fl_snmf_ldf <- ldf(fl_snmf, type = "i")
+
 save(fl_snmf_ldf, file = "output/immune_snmf_factors.RData")
-save(fl_mf_ldf, file = "output/immune_mf_factors.RData" )
+save(fl_mf_ldf, file = "output/immune_mf_factors.RData")
 ```
 
+### Explore and Visualize Factors
 
-## Explore factors identified
-
-### Explore factors by traits
-
-```{r}
+```{r load-factors}
 load("../output/immune_mf_factors.RData")
 load("../output/immune_snmf_factors.RData")
 ```
 
+#### Structure Plots
 
-```{r}
+Visualize the factor patterns across traits for both methods by using strcture plot.
+
+```{r structure-plots}
+# Define trait order for consistent visualization
 traits <- colnames(Y)
+traits <- factor(traits,
+                 levels = c("celiac_disease", "psoriasis", "rheumatoid_arthritis",
+                            "ankylosing_spondylitis", "multiple_sclerosis", 
+                            "inflammatory_bowel_disease", "crohns_disease", 
+                            "ulcerative_colitis", "systemic_lupus_erythematosus",
+                            "biopolar_disorder", "type_1_diabetes"))
+
+# Source plotting functions
+source('../code/sturcture_plot.R')
+
+# Create comparison plot
+plot_grid(p1, p2, nrow = 2, ncol = 1)
+```
+
+#### Heatmap Visualization of Factors
+
+Alternative visualization showing factor effects across traits by heatmap.
+
+```{r factor-heatmaps}
+source('../code/plot_factors.R')
+
+# Plot semi-NMF factors
+F_snmf <- fl_snmf_ldf$F
+p_snmf <- plot_factors(F_snmf, row_names = rownames(F_snmf),
+                      col_names = paste0("k", 1:ncol(F_snmf))) +
+          scale_fill_gradient2(low = viridis(3)[1], 
+                              high = viridis(3)[2], 
+                              name = "Factor Effect") +
+          xlab("Factor") +
+          ggtitle("Semi-NMF Factors") +
+          scale_x_discrete(position = "top") +
+          theme(axis.text.x = element_text(angle = 0),
+                panel.background = element_rect(fill = "white"),
+                axis.ticks = element_blank())
+
+# Plot Laplace MF factors
+F_mf <- fl_mf_ldf$F
+p_mf <- plot_factors(F_mf, row_names = rownames(F_mf),
+                    col_names = paste0("k", 1:ncol(F_mf))) +
+        scale_fill_gradient2(low = viridis(3)[1], 
+                            high = viridis(3)[2], 
+                            name = "Factor Effect") +
+        xlab("Factors") +
+        ggtitle("Laplace MF Factors") +
+        scale_x_discrete(position = "top") +
+        theme(axis.text.x = element_text(angle = 0),
+              panel.background = element_rect(fill = "white"),
+              axis.ticks = element_blank())
+
+# Combine plots
+plot_grid(p_snmf, p_mf, nrow = 2, ncol = 1)
+```
+
+From both structure plot and heatmap, from semi-NMF model, K2 is dominantly impact IBD, CD, and UC. K3 have negative impact on IBD, CD, and UC. K3 have negative impact on IBD, CD, and UC. And positive impact on celiac disease. K6 is dominant for bipolar disorder, both positive and negative effects. K2 also have a pretty strong negative impact on systemic lupus erythematosus. 
+
+### Factor Analysis by Affected Biological System
+
+Explore whether factors correspond to specific biological systems affected by the autoimmune diseases.
+
+```{r affect-system-heatmap}
 F <- fl_snmf_ldf$F
-k <- ncol(F)
-colnames(F) <- paste0("k",1:k)
-trait_factors <- c(1:k)
-traits <-
- factor(traits,
-        c("celiac_disease", "psoriasis", "rheumatoid_arthritis",
-          "ankylosing_spondylitis", "multiple_sclerosis", "inflammatory_bowel_disease",
-          "crohns_disease", "ulcerative_colitis", "systemic_lupus_erythematosus",
-          "biopolar_disorder", "type_1_diabetes"))
-p1 <- structure_plot(F,topics = trait_factors, 
-                     grouping = traits,
-                     gap = 3,
-                     perplexity = 70,
-                     n = 500) +
-  labs(y = "membership",title = "trait factors",
-       fill = "factor",color = "factor") 
-```
-
-
-```{r}
-F <- fl_mf_ldf$F
-k <- ncol(F)
-colnames(F) <- paste0("k",1:k)
-trait_factors <- c(1:8)
-traits <-
- factor(traits,
-        c("celiac_disease", "psoriasis", "rheumatoid_arthritis",
-          "ankylosing_spondylitis", "multiple_sclerosis", "inflammatory_bowel_disease",
-          "crohns_disease", "ulcerative_colitis", "systemic_lupus_erythematosus",
-          "biopolar_disorder", "type_1_diabetes"))
-p2 <- structure_plot(F,topics = trait_factors, 
-                     #grouping = traits,
-                     gap = 3,
-                     #perplexity = 70,
-                     n = 500) +
-  labs(y = "membership",title = "trait factors",
-       fill = "factor",color = "factor") 
-
-plot_grid(p1,p2,nrow = 2,ncol = 1)
-```
-
-
-
-```{r}
-fit <- F
-# Check if 'fit' is a matrix or model object
-if (is.matrix(fit)) {
-  L   <- fit
-  F   <- matrix(1, nrow(L), ncol(L))
-  fit <- list(F = F, L = L)
-  class(fit) <- "poisson_nmf_fit"
-} else {
-  if (!(inherits(fit, "poisson_nmf_fit") | inherits(fit, "multinom_topic_model_fit")))
-    stop("Invalid input class.")
-  if (inherits(fit, "poisson_nmf_fit"))
-    fit <- poisson2multinom(fit)  # Assume this function exists
-}
-
-n0 <- nrow(fit$L)  # Number of samples
-k  <- ncol(fit$L)   # Number of topics
-
-if (is.null(colnames(fit$L)))
-  colnames(fit$L) <- paste0("k", 1:k)
-
-if (missing(topics))
-    topics <- order(colMeans(fit$L))
-if (!is.character(topics))
-    topics <- colnames(fit$L[,topics,drop = FALSE])
-if (!(length(topics) > 1 & all(is.element(topics,colnames(fit$L)))))
-    stop("Input argument \"topics\" should be a subset of at least two ",
-         "topics (columns of fit$L) specified by their names or column ",
-         "indices")
-
-if (missing(grouping))
-    grouping <- factor(rep(1,n0))
-if (!is.factor(grouping))
-    grouping <- as.factor(grouping)
-if (length(grouping) != n0)
-    stop("Input argument \"grouping\" should be a factor with one entry ",
-         "for each row of fit$L")
-
-colors9 <- c("#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00",
-               "#ffff33","#a65628","#f781bf","#999999")
-
-if (missing(colors)) {
-    if (k < 10)
-      colors <- colors9
-    else if (k < 22)
-      colors <- kelly()[-1]
-    else      
-      colors <- glasbey()[-1]
-}
-if (length(colors) < k)
-    stop("There must be at least as many colours as topics")
-
-names(colors) <- colnames(fit$L)
-colors <- colors[topics]
-n <- 500
-loadings_order <- "embed"
-
-
-embed_method <- function(fit) {
-if (nrow(fit$L) < 20) {
-    return(rnorm(nrow(fit$L)))
-} else {
-    d <- dim(fit$L)
-    message(sprintf("Running tsne on %s x %s matrix.",d[1],d[2]))
-    return(drop(suppressMessages(tsne_from_topics(fit,dims = 1,...))))
-  }
-}
-
-if (all(loadings_order == "embed")) {
-
-    # If necessary, randomly subsample the rows of L.
-    if (n < n0) {
-      rows <- sample(n0,n)
-      fit <- select_loadings(fit,rows)
-      grouping <- grouping[rows,drop = FALSE]
-    }
-
-    # The ordering of the rows is not provided, so determine an
-    # ordering by computing a 1-d embedding of L.
-    if (nlevels(grouping) == 1) {
-      y <- embed_method(fit)
-      loadings_order <- order(y)
-    } else {
-      loadings_order <- NULL
-      for (group in levels(grouping)) {
-        i <- which(grouping == group)
-        if (length(i) > 0)
-          y <- embed_method(select_loadings(fit,i),...)
-        loadings_order <- c(loadings_order,i[order(y)])
-      }
-    }
-  } else {
-    if (!missing(n))
-      warning("Input argument \"n\" is ignored when \"loadings_order\" is ",
-              "not \"embed\"")
-    if (is.character(loadings_order))
-      loadings_order <- match(loadings_order,rownames(fit$L))
-}
-
-fit$L <- fit$L[loadings_order,]
-grouping <- grouping[loadings_order,drop = TRUE]
-
-compile_structure_plot_data <- function (L, topics) {
-  n <- nrow(L)
-  k <- length(topics)
-  dat <- data.frame(sample = rownames(fit$L),
-                    topic  = rep(topics,each = n),
-                    prop   = c(L[,topics]))
-  dat$topic <- factor(dat$topic,topics)
-  return(dat)
-}
-
-dat <- compile_structure_plot_data(fit$L,topics)
-
-structure_plot_ggplot_call <- function (dat, colors, ticks = NULL,
-                                        font.size = 9, linewidth = 3) {
-  ggplot(dat,aes_string(x = "sample",y = "prop",fill = "topic")) +
-    geom_col(linewidth = linewidth,width = 0.9) +
-    #scale_x_continuous(limits = c(0,max(dat$sample) + 1),breaks = ticks,
-                       #labels = names(ticks)) +
-    scale_fill_manual(values = colors) +
-    labs(x = "",y = "membership") +
-    theme_cowplot(font.size) +
-    theme(axis.line   = element_blank(),
-          axis.ticks  = element_blank(),
-          axis.text.x = element_text(angle = 45,hjust = 1))
-}
-p1 <- structure_plot_ggplot_call(dat,colors)
-p2 <- structure_plot_ggplot_call(dat,colors)
-
-plot_grid(p1,p2,nrow = 2,ncol = 1)
-```
-
-
-```{r}
-plot_factors <- function(x, row_names, col_names, row_order, col_order,
-                         row_title = "Trait", col_title = "Factor"){
-  if(is.null(x)) return(NULL)
-  if(missing(row_names)) row_names <-  seq(nrow(x))
-  if(missing(col_names)) col_names <-  seq(ncol(x))
-  if(missing(row_order)) row_order <- seq(nrow(x))
-  if(missing(col_order)) col_order <- seq(ncol(x))
-  rownames(x) <- row_names
-  colnames(x) <- col_names
-  x <- x[row_order, col_order]
-  meltx <- melt(x)
-  names(meltx)[1:2] <- c("R", "C")
-  meltx <- meltx %>%
-     mutate( R = factor(R, levels = row_names[row_order]),
-             C = factor(C, levels = col_names[col_order]))
-  ggplot(data = meltx, aes(x=C, y=R, fill=value)) +
-    ylab(row_title) +
-    xlab(col_title) +
-    geom_tile() +
-    scale_fill_gradient2() +
-    theme(axis.text.x = element_text(angle=90))
-}
-```
-
-```{r}
-F <- fl_snmf_ldf$F
-
-p <- plot_factors(F, row_names = rownames(F), col_names = paste0("k", 1:8)) +
-     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = "Factor Effect") +
-     xlab("Mediator") +
-     ggtitle("Factor") +
-     scale_x_discrete(position = "top")+
-     theme(axis.text.x = element_text(angle = 0),
-           panel.background = element_rect(fill = "white"),
-           axis.ticks = element_blank())
-p
-```
-
-
-```{r}
-F <- fl_mf_ldf$F
-
-p <- plot_factors(F, row_names = rownames(F), col_names = paste0("k", 1:ncol(F))) +
-     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = "Factor Effect") +
-     xlab("Factors") +
-     ggtitle("Factor") +
-     scale_x_discrete(position = "top")+
-     theme(axis.text.x = element_text(angle = 0),
-           panel.background = element_rect(fill = "white"),
-           axis.ticks = element_blank())
-p
-```
-
-
-### Explore factors by affected system
-
-```{r}
-F <- fl_snmf_ldf$F
-
-affected_system <- c('gastrointestinal', 'Skin', 'joints_muscles', 'spine_sacroiliac_joints', 'nervous', 'gastrointestinal', 'gastrointestinal', 'gastrointestinal', 'multiple', 'nervous', 'Eedocrine_glands')
-
-affected_system <- factor(affected_system, 
-                          c('gastrointestinal', 'Skin', 'joints_muscles', 'spine_sacroiliac_joints', 
-                            'nervous', 'multiple', 'Eedocrine_glands'))
-
-p1 <- fastTopics::structure_plot(F,topics = c(1:ncol(F)),grouping = affected_system,
-                     #gap = 1,perplexity = 70,
-                     n = 500) +
-  labs(y = "membership",title = "factors",
-       fill = "factor",color = "factor")
-```
-
-
-```{r}
-F <- fl_mf_ldf$F
-
-p2 <- fastTopics::structure_plot(F,topics = c(1:ncol(F)),grouping = affected_system,
-                     #gap = 1,perplexity = 70,
-                     n = 500) +
-  labs(y = "membership",title = "factors",
-       fill = "factor",color = "factor")
-```
-
-
-```{r}
 traits <- rownames(F)
 
 affected_system <- c(
@@ -366,38 +213,44 @@ affected_system <- c(
   "nervous", "endocrine_glands"
 )
 
+anno_data <- plot_factor_annotation_data(F, affected_system)
 
-```
-
-
-```{r}
-affected_system_df <- data.frame(Groups=affected_system)
-rownames(affected_system_df) <- rownames(F)
-colnames(F) <- paste0("k", 1:ncol(F))
-
-trait_order <- order(affected_system_df$Groups)
-F_ordered <- F[trait_order, ]
-affected_system_df_ordered <- affected_system_df[trait_order, , drop = FALSE]
-
-# Choose a palette or assign custom colors
-group_levels <- unique(affected_system_df_ordered$Groups)
-group_colors <- setNames(
-  viridis(length(group_levels), option = "D"),
-  group_levels
+# Create heatmap
+p_snmf_anno <- pheatmap::pheatmap(
+  anno_data$F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "Semi-NMF Factors by Affected Biological System",
+  color = colorRampPalette(c("white", "#21908CFF"))(100)
 )
 
-# Create the annotation_colors list
-ann_colors <- list(Groups = group_colors)
+p_snmf_anno
 
+F <- fl_mf_ldf$F
+traits <- rownames(F)
 
+anno_data <- plot_factor_annotation_data(F, affected_system)
 
-pheatmap(F_ordered, cluster_cols = FALSE, scale = 'row', cluster_rows = FALSE,
-            annotation_row = affected_system_df_ordered,
-            show_colnames = FALSE,
-            border_color = "white",
-            colorRampPalette(c("#440154FF", "white", "#21908CFF"))(75),
-            annotation_colors = ann_colors
-            #gaps_col = cumsum(c(5,5))
+# Create heatmap
+p_snmf_anno <- pheatmap::pheatmap(
+  anno_data$F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "MF Factors by Affected System",
+  color = colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100)
 )
+
+p_mf_anno
 ```
 
+For K2 and K3, they have impact on disease that have the same affected system, gastrointestinal. 
