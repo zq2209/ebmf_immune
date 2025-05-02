@@ -4,15 +4,15 @@ site: workflowr::wflow_site
 output: workflowr::wflow_html
 ---
 
-See [here][https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0] for an overview of GWAS data information
+See [here](https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0) for an overview of GWAS data information
 
 
 
 **Analyses:**
 
-+ [Initial processing of GWAS data.](autoimmune.html)
++ [Initial processing and exploration of the autoimmune GWAS data.](autoimmune.html)
 
-+ [Factorizing the multi-trait GWAS data set.](autoimmune_factors.html)
++ [Factorizing the autoimmune GWAS data set.](autoimmune_factors.html)
 
 
 
