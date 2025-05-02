@@ -10,9 +10,9 @@ See [here][https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50J
 
 **Analyses:**
 
-+ [Initial processing of GWAS data.](gwas_preprocessing.html)
++ [Initial processing of GWAS data.](autoimmune.html)
 
-+ [Factorizing the multi-trait GWAS data set.](compute_flashier_factors_immune.html)
++ [Factorizing the multi-trait GWAS data set.](autoimmune_factors.html)
 
 
 

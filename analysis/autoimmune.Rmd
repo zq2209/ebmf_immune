@@ -1,37 +1,53 @@
 ---
-title: "gwas_preprocessing"
+title: "Initial processing and exploration of the autoimmune GWAS data"
 author: "Zining Qi"
-output: pdf_document
-editor_options: 
-  chunk_output_type: console
+output: workflowr::wflow_html
 ---
 
-The aim of this analysis is to take an initial look at the autoimmune disease GWAS data set that were published in [GWAS Catelog][https://www.ebi.ac.uk/gwas/], and prepare the data in a convenient form for subsequent analyses in R.
+This analysis processes genome-wide association study (GWAS) data for multiple autoimmune diseases obtained from the [GWAS Catalog](https://www.ebi.ac.uk/gwas/). The goal is to prepare the data for subsequent analyses by:
 
-The detailed overview of all autoimuune disease used in this analysis refers to [here.][https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0]
+1. Identifying variants common across all traits
+2. Extracting effect sizes ($\beta$) and standard errors
+3. Cleaning and organizing the data
+4. Visualizing distributions
+5. Creating analysis-ready matrices
 
-First, load the packages needed for this analysis. Note that MatrixExtra is also used in one of the steps below
+The complete list of autoimmune diseases included can be found [here](https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0).
 
-```{r knitr-opts, include=FALSE}
-knitr::opts_chunk$set(comment = "#",collapse = TRUE,results = "hold",
-                      fig.align = "center",dpi = 120)
+### Setup
+
+First, we load required packages and set knitr options:
+
+```{r setup, include=FALSE}
+# Set knitr options for consistent output formatting
+knitr::opts_chunk$set(
+  comment = "#",
+  collapse = TRUE,
+  results = "hold",
+  fig.align = "center",
+  dpi = 120
+)
 ```
 
-```{r load-pkgs, message=FALSE}
-library(tidyverse)
-library(data.table)
+```{r load-packages, message=FALSE}
+# Load required packages
+library(tidyverse)    # For data manipulation and visualization
+library(data.table)   # For efficient data reading and processing
+library(pheatmap)
 ```
 
-First, we extract overlap variants in these autoimmune disease GWAS data
+### Identify Common Variants Across Studies
 
-```{r}
-# List all .h.tsv files
+This step is to find genetic variants that are present in all GWAS studies to enable cross-study comparisons.
+
+```{r find-common-variants}
+# List all GWAS data files
 files <- list.files(pattern = "\\.h\\.tsv$")
 
-# Read first file to initialize common variants
+# Initialize with variants from first file
 common_variants <- fread(files[1], select = "variant_id")[[1]]
 
-# Iterate through remaining files and keep intersections
+# Iterate through files to find intersection of variants
 for (file in files[c(-1, -12, -13)]) {
   current_variants <- fread(file, select = "variant_id")[[1]]
   common_variants <- intersect(common_variants, current_variants)
@@ -40,44 +56,32 @@ for (file in files[c(-1, -12, -13)]) {
 
 # Save results
 writeLines(common_variants, "common_variant_ids.txt")
-cat("Final overlapping variants:", length(common_variants))
+cat("Final number of overlapping variants:", length(common_variants))
 ```
 
-Then, we select these common variants and there corresponding effect sizes in each disease. 
+### Extract Effect Sizes for Common Variants
 
-```{r, eval=FALSE}
+For each study, extract effect sizes ($\beta$) only for the common variants identified in Step 1.
+
+
+```{r extract-effects, eval=FALSE}
 results_list <- list()
-
-# Loop through each file and extract the common variants
-for (file in files[c(-12, -13)]) {
-  # Read only the variant_id and beta columns for efficiency
-  gwas_data <- fread(file, select = c("variant_id", "beta"))
-  
-  # Filter for common variants and add filename as identifier
-  filtered_data <- gwas_data %>% 
-    filter(variant_id %in% common_variants) %>%
-    mutate(source = gsub("\\.h\\.tsv$", "", file))
-  
-  results_list[[file]] <- filtered_data
-}
-combined_results <- bind_rows(results_list)
-```
-
-
-```{r, eval=FALSE}
 duplicate_report <- list()
 
 for (file in files[c(-12, -13)]) {
-  gwas_data <- fread(file, select = c("variant_id", "beta", 'standard_error'))
+  # Read relevant columns
+  gwas_data <- fread(file, select = c("variant_id", "beta", "standard_error"))
   
+  # Filter to common variants and compute Z-scores
   filtered_data <- gwas_data %>% 
     filter(variant_id %in% common_variants) %>%
-    mutate(source = gsub("\\.h\\.tsv$", "", file)) %>% 
-    mutate(z_hat = beta / standard_error)
+    mutate(
+      source = gsub("\\.h\\.tsv$", "", file),
+      z_hat = beta / standard_error
+    )
   
-  # Identify duplicates
+  # Identify and report duplicates
   dup_variants <- filtered_data$variant_id[duplicated(filtered_data$variant_id)]
-  
   if(length(dup_variants) > 0) {
     duplicate_report[[file]] <- data.table(
       file = file,
@@ -86,19 +90,20 @@ for (file in files[c(-12, -13)]) {
     )
   }
   
-  # Keep only first occurrence
+  # Keep only first occurrence of each variant
   results_list[[file]] <- filtered_data[!duplicated(filtered_data$variant_id), ]
 }
 
+# Combine all studies
 combined_results <- bind_rows(results_list)
 ```
 
-Map file name to corresponding disease. 
+### Map Study IDs to Disease Names
 
-```{r, eval=FALSE}
-# Map source file names to its disease
-load('../data/autoimmune_combined_results.RData')
+Then, replace study identifiers with meaningful disease names for clearer interpretation.
 
+```{r map-diseases, eval=FALSE}
+# Create study-to-disease mapping
 study_to_disease <- data.frame(
   source = c("20190752-GCST000612-EFO_0001060",
              "23749187-GCST005529-EFO_0003898",
@@ -124,63 +129,76 @@ study_to_disease <- data.frame(
               "systemic_lupus_erythematosus")
 )
 
-# Merge with your results
+# Merge mapping with results
 combined_results <- merge(combined_results, study_to_disease, by = "source", all.x = TRUE)
-save(combined_results, file = 'autoimmune_combined_results.RData')
+
+# Save processed data
+save(combined_results, file = '../data/autoimmune_combined_results.RData')
 ```
 
-After combining all gwas effect sizes into one dataset, we plot distribution of $ \hat{\beta} $
+### Visualize Effect Size Distributions
+
+#### Overall Distribution of Effect Sizes ($\beta$)
+
+Before running any matrix facotorization, we want to examine the distribution of genetic effect sizes across all studies.
 
 ```{r}
+load('../data/autoimmune_combined_results.RData')
+```
+
+
+```{r beta-distribution}
 ggplot(combined_results, aes(x = beta)) +
   geom_histogram(binwidth = 0.01, fill = "#21908CFF", color = "black") +
   theme_minimal() +
-  labs(#title = "Distribution of Beta",
-       x = expression(hat(beta)),
+  labs(x = expression(hat(beta)),
        y = "Count")
 ```
 
-Plot distribution of $ \hat{\beta} $ by traits
+#### Effect Size Distribution by Disease
 
-```{r}
+Then, compare effect size distributions across different autoimmune diseases.
+
+```{r beta-by-disease}
 ggplot(combined_results, aes(x = beta)) +
   geom_histogram(binwidth = 0.03, fill = "#21908CFF", color = "black") +
   facet_wrap(~ disease, scales = "free_y") +
   theme_minimal() +
-  labs(#title = expression("Distribution of " * hat(beta)),
-       x = expression(hat(beta)),
+  labs(x = expression(hat(beta)),
        y = "Count")
 ```
 
-Plot distribution of $\hat{Z} = \hat{\beta} / \text{SE} $
+#### Overall Distribution of Z-scores
 
-```{r}
+Additional, we examine the distribution of Z-scores ($\beta$/SE) which indicate significance of associations.
+
+```{r zscore-distribution}
 ggplot(combined_results, aes(x = z_hat)) +
   geom_histogram(binwidth = 1, fill = "#21908CFF", color = "black") +
   theme_minimal() +
-  labs(#title = expression("Distribution of " * hat(Z)),
-       x = expression(hat(Z)),
+  labs(x = expression(hat(Z)),
        y = "Count")
 ```
 
+#### Z-score Distribution by Disease
 
-Plot distribution of $\hat{Z} = \hat{\beta} / \text{SE} $ by traits
+Also, compare Z-score distributions across different autoimmune diseases.
 
-```{r}
+```{r zscore-by-disease}
 ggplot(combined_results, aes(x = z_hat)) +
   geom_histogram(binwidth = 1, fill = "#21908CFF", color = "black") +
   facet_wrap(~ disease, scales = "free_y") +
   theme_minimal() +
-  labs(#title = expression("Distribution of " * hat(Z) * " by trait"),
-       x = expression(hat(Z)),
+  labs(x = expression(hat(Z)),
        y = "Count")
 ```
 
-Finally, convert the long table to wide table that rows are variants and columns are traits. 
+### Create Analysis-Ready Matrices
 
-```{r}
+This step is to reshape data into variant-by-disease matrices for downstream analysis.
 
-# Reshape to wide format if desired (one column per study)
+```{r create-matrices}
+# Create variant-by-disease beta matrix
 beta_matrix <- combined_results %>%
   pivot_wider(
     id_cols = variant_id,
@@ -190,37 +208,42 @@ beta_matrix <- combined_results %>%
   as.data.frame() %>%
   column_to_rownames("variant_id") 
 
-save(beta_matrix, file = "beta_matrix.RData")
-fwrite(beta_matrix, row.names = TRUE,
-       file = "beta_matrix.csv")
+z_matrix <- combined_results %>%
+  pivot_wider(
+    id_cols = variant_id,
+    names_from = disease,
+    values_from = z_hat
+  ) %>% 
+  as.data.frame() %>%
+  column_to_rownames("variant_id") 
+
+# Save in multiple formats
+#save(beta_matrix, file = "beta_matrix.RData")
+#fwrite(beta_matrix, row.names = TRUE, file = "beta_matrix.csv")
 ```
 
+### Visualize Patterns in Effect Sizes
 
-```{r}
-pheatmap(beta_matrix, cluster_cols = FALSE, scale = 'row', cluster_rows = FALSE,
-            #annotation_row = affected_system_df_ordered,
-            show_colnames = TRUE,
-            show_rownames = FALSE,
-            #border_color = "white",
-            colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100),
-            #annotation_colors = ann_colors
-            #gaps_col = cumsum(c(5,5))
+Fianlly, we can explore patterns and relationships between diseases through heatmap visualization.
+
+```{r heatmap}
+# Heatmap of effect sizes (scaled by row)
+pheatmap(beta_matrix, 
+         cluster_cols = FALSE, 
+         scale = 'row', 
+         cluster_rows = FALSE,
+         show_colnames = TRUE,
+         show_rownames = FALSE,
+         color = colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100)
 )
 
-plot_factors(beta_matrix, col_names = colnames(beta_matrix)) +
-     scale_fill_gradient2(low = viridis(3)[1], high = viridis(3)[2], name = expression(beta)) +
-     xlab("Trait") +
-     ggtitle("") +
-     scale_x_discrete(position = "top")+
-     theme(axis.text.x = element_text(angle = 0),
-           panel.background = element_rect(fill = "white"),
-           axis.ticks = element_blank())
+# pheatmap(z_matrix, 
+#          cluster_cols = FALSE, 
+#          scale = 'row', 
+#          cluster_rows = FALSE,
+#          show_colnames = TRUE,
+#          show_rownames = FALSE,
+#          color = colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100)
+# )
 ```
-
-
-
-
-
-
-
 
