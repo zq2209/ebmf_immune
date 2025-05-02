@@ -432,15 +432,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetreedbc9ca80b6467ca180ced0b96b0bee86ca567b8ftargetblankdbc9ca8a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree30a211dc8958e5c48fc86c3e53831a62ed27ac07targetblank30a211da">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/zq2209/ebmf_immune/tree/dbc9ca80b6467ca180ced0b96b0bee86ca567b8f" target="_blank">dbc9ca8</a>
+<a href="https://github.com/zq2209/ebmf_immune/tree/30a211dc8958e5c48fc86c3e53831a62ed27ac07" target="_blank">30a211d</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetreedbc9ca80b6467ca180ced0b96b0bee86ca567b8ftargetblankdbc9ca8a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree30a211dc8958e5c48fc86c3e53831a62ed27ac07targetblank30a211da"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -450,7 +450,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/zq2209/ebmf_immune/tree/dbc9ca80b6467ca180ced0b96b0bee86ca567b8f" target="_blank">dbc9ca8</a>.
+<a href="https://github.com/zq2209/ebmf_immune/tree/30a211dc8958e5c48fc86c3e53831a62ed27ac07" target="_blank">30a211d</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -466,6 +466,9 @@ were generated:
 <pre><code>
 Ignored files:
     Ignored:    .Rproj.user/
+
+Unstaged changes:
+    Modified:   analysis/autoimmune_factors.Rmd
 
 </code></pre>
 <p>
@@ -510,6 +513,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/zq2209/ebmf_immune/blob/30a211dc8958e5c48fc86c3e53831a62ed27ac07/analysis/autoimmune.Rmd" target="_blank">30a211d</a>
+</td>
+<td>
+“John
+</td>
+<td>
+2025-05-01
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zq2209/ebmf_immune/86a0ff284c88aad27c8d1f997733714f0e68d9af/docs/autoimmune.html" target="_blank">86a0ff2</a>
+</td>
+<td>
+“John
+</td>
+<td>
+2025-05-01
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -645,6 +682,14 @@ for (file in files[c(-1, -12, -13)]) {
 # Save results
 writeLines(common_variants, &quot;common_variant_ids.txt&quot;)
 cat(&quot;Final number of overlapping variants:&quot;, length(common_variants))</code></pre>
+<p>Final number of overlapping variants are over 18000. Two traits were
+dropped because the overlapping of these two traits will be too low.</p>
+<p><strong>Fixme</strong>:</p>
+<ol style="list-style-type: decimal">
+<li>The number of overlapping is low?</li>
+<li>No stringent processing on variants now, such as no MAF filter,
+harmonized of effects.</li>
+</ol>
 </div>
 <div id="extract-effect-sizes-for-common-variants"
 class="section level3">
@@ -923,6 +968,11 @@ Date
 </table>
 </div>
 </div>
+<p><strong>Fixme</strong>:</p>
+<ol style="list-style-type: decimal">
+<li>Beta distribution seems normal right now but effect size are small,
+use z score instead?</li>
+</ol>
 </div>
 </div>
 <div id="create-analysis-ready-matrices" class="section level3">

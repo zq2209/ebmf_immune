@@ -30,6 +30,7 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(reshape2)
 library(cowplot)
+library(viridis)
 
 # Matrix factorization tools
 library(flashier)
@@ -59,7 +60,7 @@ Y <- as.matrix(beta_matrix)
 Factorize the effect size matrix into latent factors using semi-NMF, which allows for capturing only same direction of the disease mechanism.
 
 
-```{r semi-nmf, message=FALSE}
+```{r semi-nmf, message=FALSE, eval=FALSE}
 # Calculate trait-specific variances
 var_per_trait <- apply(beta_matrix, 2, var, na.rm = TRUE)
 s1 <- 0.1 * min(var_per_trait, na.rm = TRUE)  # Set minimum variance threshold
@@ -88,13 +89,19 @@ t1 <- proc.time()
 # Record timing
 timings$fl_snmf <- t1 - t0
 print(timings$fl_snmf)
+
+# user     system  elapsed 
+# 99.693   8.619   110.916 
 ```
+
+   user  system elapsed 
+ 99.693   8.619 110.916 
 
 ### Matrix Factorization with Laplace Priors
 
 Decompose the matrix using Laplace priors for both loadings and factors, which encourages capturing both positive and negative direction of the disease mechanism.
 
-```{r laplace-mf, message=FALSE}
+```{r laplace-mf, message=FALSE, eval=FALSE}
 t0 <- proc.time()
 fl0_mf <- flash(Y,
                 ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
@@ -115,6 +122,9 @@ t1 <- proc.time()
 # Record timing
 timings$fl_mf <- t1 - t0
 print(timings$fl_mf)
+
+# user    system  elapsed 
+# 108.067 7.943   117.655 
 ```
 
 Save the factor loadings for downstream analysis.
@@ -148,6 +158,7 @@ traits <- factor(traits,
                             "inflammatory_bowel_disease", "crohns_disease", 
                             "ulcerative_colitis", "systemic_lupus_erythematosus",
                             "biopolar_disorder", "type_1_diabetes"))
+trait_factors <- c(1:8)
 
 # Source plotting functions
 source('../code/sturcture_plot.R')
@@ -237,7 +248,7 @@ traits <- rownames(F)
 anno_data <- plot_factor_annotation_data(F, affected_system)
 
 # Create heatmap
-p_snmf_anno <- pheatmap::pheatmap(
+p_mf_anno <- pheatmap::pheatmap(
   anno_data$F_ordered,
   annotation_row = anno_data$annotation_df,
   annotation_colors = anno_data$annotation_colors,
