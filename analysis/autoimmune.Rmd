@@ -40,7 +40,7 @@ library(pheatmap)
 
 This step is to find genetic variants that are present in all GWAS studies to enable cross-study comparisons.
 
-```{r find-common-variants}
+```{r find-common-variants, eval=FALSE}
 # List all GWAS data files
 files <- list.files(pattern = "\\.h\\.tsv$")
 
