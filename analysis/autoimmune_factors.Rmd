@@ -94,8 +94,6 @@ print(timings$fl_snmf)
 # 99.693   8.619   110.916 
 ```
 
-   user  system elapsed 
- 99.693   8.619 110.916 
 
 ### Matrix Factorization with Laplace Priors
 
@@ -149,7 +147,7 @@ load("../output/immune_snmf_factors.RData")
 
 Visualize the factor patterns across traits for both methods by using strcture plot.
 
-```{r structure-plots}
+```{r structure-plots, message=FALSE}
 # Define trait order for consistent visualization
 traits <- colnames(Y)
 traits <- factor(traits,
