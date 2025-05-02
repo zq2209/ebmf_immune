@@ -432,15 +432,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree1f8e8279fa757011449326e83d353ea445c7f024targetblank1f8e827a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree107ca64d0ffd05084b5209855a0c2356d274ce17targetblank107ca64a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/zq2209/ebmf_immune/tree/1f8e8279fa757011449326e83d353ea445c7f024" target="_blank">1f8e827</a>
+<a href="https://github.com/zq2209/ebmf_immune/tree/107ca64d0ffd05084b5209855a0c2356d274ce17" target="_blank">107ca64</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree1f8e8279fa757011449326e83d353ea445c7f024targetblank1f8e827a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree107ca64d0ffd05084b5209855a0c2356d274ce17targetblank107ca64a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -450,7 +450,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/zq2209/ebmf_immune/tree/1f8e8279fa757011449326e83d353ea445c7f024" target="_blank">1f8e827</a>.
+<a href="https://github.com/zq2209/ebmf_immune/tree/107ca64d0ffd05084b5209855a0c2356d274ce17" target="_blank">107ca64</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -510,6 +510,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/zq2209/ebmf_immune/blob/107ca64d0ffd05084b5209855a0c2356d274ce17/analysis/autoimmune_factors.Rmd" target="_blank">107ca64</a>
+</td>
+<td>
+“John
+</td>
+<td>
+2025-05-01
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zq2209/ebmf_immune/a0ef0d27637bcb3f597d8a28208f13a35a1ec41f/docs/autoimmune_factors.html" target="_blank">a0ef0d2</a>
+</td>
+<td>
+“John
+</td>
+<td>
+2025-05-01
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -618,36 +652,12 @@ systems</li>
 <p>Load required packages and data:</p>
 <pre class="r"><code># Data manipulation and visualization
 library(tidyverse)
-# ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-# ✔ dplyr     1.1.4     ✔ readr     2.1.5
-# ✔ forcats   1.0.0     ✔ stringr   1.5.1
-# ✔ ggplot2   3.5.2     ✔ tibble    3.2.1
-# ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-# ✔ purrr     1.0.4     
-# ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-# ✖ dplyr::filter() masks stats::filter()
-# ✖ dplyr::lag()    masks stats::lag()
-# ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors
 library(reshape2)
-# 
-# Attaching package: &#39;reshape2&#39;
-# 
-# The following object is masked from &#39;package:tidyr&#39;:
-# 
-#     smiths
 library(cowplot)
-# 
-# Attaching package: &#39;cowplot&#39;
-# 
-# The following object is masked from &#39;package:lubridate&#39;:
-# 
-#     stamp
 library(viridis)
-# Loading required package: viridisLite
 
 # Matrix factorization tools
 library(flashier)
-# Loading required package: ebnm
 library(fastTopics)
 
 # Load preprocessed GWAS effect size matrix
