@@ -90,7 +90,7 @@ From the plot, each factor is perfectly associated with traits. For affected sys
 
 Now, plot the structure plot by cutting off the factors with $R^2$ less than 0.7
 
-```{r affected-system-0.7}
+```{r snmf-affectedsystem-0.7}
 source('../code/plot_factors.R')
 
 anno_data <- plot_factor_annotation_data(F, affected_system)
@@ -116,7 +116,7 @@ p_snmf_grouping1
 
 Then, plot the structure plot by cutting off the factors with $R^2$ less than 0.5.
 
-```{r affected-system-0.7}
+```{r snmf-affectedsystem-0.5}
 factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.5])
 F_ordered <- anno_data$F_ordered[, factors_to_plot]
 # Create heatmap
@@ -139,7 +139,7 @@ p_snmf_grouping2
 
 Also, plot the structure plot by cutting off the factors with $R^2$ less than 0.3.
 
-```{r affected-system-0.7}
+```{r snmf-affectedsystem-0.3}
 factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.3])
 F_ordered <- anno_data$F_ordered[, factors_to_plot]
 # Create heatmap
@@ -200,7 +200,7 @@ From the plot, each factor is perfectly associated with traits. For affected sys
 
 Now, plot the structure plot by cutting off the factors with $R^2$ less than 0.7
 
-```{r affected-system-0.7}
+```{r mf-affectedsystem-0.7}
 anno_data <- plot_factor_annotation_data(F, affected_system)
 factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.7])
 F_ordered <- anno_data$F_ordered[, factors_to_plot]
@@ -224,7 +224,7 @@ p_mf_grouping1
 
 Then, plot the structure plot by cutting off the factors with $R^2$ less than 0.5.
 
-```{r affected-system-0.7}
+```{r mf-affectedsystem-0.5}
 factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.5])
 F_ordered <- anno_data$F_ordered[, factors_to_plot]
 # Create heatmap
@@ -247,7 +247,7 @@ p_mf_grouping2
 
 Also, plot the structure plot by cutting off the factors with $R^2$ less than 0.3.
 
-```{r affected-system-0.7}
+```{r mf-affectedsystem-0.3}
 factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.3])
 F_ordered <- anno_data$F_ordered[, factors_to_plot]
 # Create heatmap
