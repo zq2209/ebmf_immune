@@ -1,0 +1,85 @@
+---
+title: "Automatic Grouping of Factors"
+author: "Zining Qi"
+output: workflowr::wflow_html
+---
+
+This analysis applies some automatic grouping of factors for the autoimmune GWAS data, based on the grouping information.
+
+The grouping methods are:
+
+1. A Simple Automatic Approach Based on ANOVA
+2. 
+
+The grouping information are:
+
+1. Traits
+
+2. Affected system
+
+### Setup
+
+Load required packages and data:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment = "#",
+  collapse = TRUE,
+  results = "hold",
+  fig.align = "center",
+  dpi = 120
+)
+```
+
+```{r load-packages-data, message=FALSE}
+# Data manipulation and visualization
+library(tidyverse)
+library(reshape2)
+library(cowplot)
+library(viridis)
+library(Matrix)
+library(ggplot2)
+
+# Matrix factorization tools
+library(flashier)
+library(fastTopics)
+
+# Load preprocessed GWAS effect size matrix
+load("../data/beta_matrix.RData")
+```
+
+### A Simple Automatic Approach Based on ANOVA
+
+#### flashier semi-NMF
+
+```{r, results="hide", message=FALSE, warning=FALSE, fig.height=6, fig.width=8}
+cells <- subsample_cell_types(sample_info$celltype,n = 500)
+L <- fl_nmf_ldf$L
+k <- ncol(L)
+colnames(L) <- paste0("k",1:k)
+```
+
+Take a look at the elbow plot:
+
+```{r, results="hide", message=FALSE, warning=FALSE, fig.height=8, fig.width=8}
+ordered_df_tech <- ANOVA_factors(L[cells,], sample_info$tech[cells], stats = "R2")
+ordered_df_celltype <- ANOVA_factors(L[cells,], sample_info$celltype[cells], stats = "R2")
+par(mfrow = c(2,1))
+plot(ordered_df_tech$rank, ordered_df_tech$stats, type = "o", xlab = "Rank", ylab = "R2", main = "batchtypes", ylim = c(0,1.1))
+text(ordered_df_tech$rank, ordered_df_tech$stats, labels = ordered_df_tech$factor, pos = 3, cex = 0.6)
+abline(h = c(0.3,0.5,0.7), col = "red", lty = 2)
+plot(ordered_df_celltype$rank, ordered_df_celltype$stats, type = "o", xlab = "Rank", ylab = "R2", main = "celltypes", ylim = c(0,1.1))
+text(ordered_df_celltype$rank, ordered_df_celltype$stats, labels = ordered_df_celltype$factor, pos = 3, cex = 0.6)
+abline(h = c(0.3,0.5,0.7), col = "red", lty = 2)
+par(mfrow = c(1,1))
+```
+
+
+
+
+
+
+
+
+
+
