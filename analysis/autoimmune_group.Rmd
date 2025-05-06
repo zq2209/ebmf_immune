@@ -9,7 +9,8 @@ This analysis applies some automatic grouping of factors for the autoimmune GWAS
 The grouping methods are:
 
 1. A Simple Automatic Approach Based on ANOVA
-2. 
+
+2. Method from GCBD
 
 The grouping information are:
 
@@ -45,7 +46,9 @@ library(flashier)
 library(fastTopics)
 
 # Load preprocessed GWAS effect size matrix
-load("../data/beta_matrix.RData")
+source('../code/group_factors.R')
+load('../output/immune_mf_factors.RData')
+load('../output/immune_snmf_factors.RData')
 ```
 
 ### A Simple Automatic Approach Based on ANOVA
@@ -53,30 +56,216 @@ load("../data/beta_matrix.RData")
 #### flashier semi-NMF
 
 ```{r, results="hide", message=FALSE, warning=FALSE, fig.height=6, fig.width=8}
-cells <- subsample_cell_types(sample_info$celltype,n = 500)
-L <- fl_nmf_ldf$L
-k <- ncol(L)
-colnames(L) <- paste0("k",1:k)
+F <- fl_snmf_ldf$F
+k <- ncol(F)
+colnames(F) <- paste0("k",1:k)
+
+traits <- rownames(F)
+affected_system <- c(
+  "gastrointestinal", "Skin", "joints_muscles", 
+  "spine_sacroiliac_joints", "nervous", 
+  "gastrointestinal", "gastrointestinal", 
+  "gastrointestinal", "multiple", 
+  "nervous", "endocrine_glands"
+)
 ```
 
 Take a look at the elbow plot:
 
 ```{r, results="hide", message=FALSE, warning=FALSE, fig.height=8, fig.width=8}
-ordered_df_tech <- ANOVA_factors(L[cells,], sample_info$tech[cells], stats = "R2")
-ordered_df_celltype <- ANOVA_factors(L[cells,], sample_info$celltype[cells], stats = "R2")
+ordered_df_traits <- ANOVA_factors(F, traits, stats = "R2")
+ordered_df_system <- ANOVA_factors(F, affected_system, stats = "R2")
 par(mfrow = c(2,1))
-plot(ordered_df_tech$rank, ordered_df_tech$stats, type = "o", xlab = "Rank", ylab = "R2", main = "batchtypes", ylim = c(0,1.1))
-text(ordered_df_tech$rank, ordered_df_tech$stats, labels = ordered_df_tech$factor, pos = 3, cex = 0.6)
+plot(ordered_df_traits$rank, ordered_df_traits$stats, type = "o", xlab = "Rank", ylab = "R2", main = "Traits", ylim = c(0,1.1))
+text(ordered_df_traits$rank, ordered_df_traits$stats, labels = ordered_df_traits$factor, pos = 3, cex = 0.6)
 abline(h = c(0.3,0.5,0.7), col = "red", lty = 2)
-plot(ordered_df_celltype$rank, ordered_df_celltype$stats, type = "o", xlab = "Rank", ylab = "R2", main = "celltypes", ylim = c(0,1.1))
-text(ordered_df_celltype$rank, ordered_df_celltype$stats, labels = ordered_df_celltype$factor, pos = 3, cex = 0.6)
+plot(ordered_df_system$rank, ordered_df_system$stats, type = "o", xlab = "Rank", ylab = "R2", main = "Afftected System", ylim = c(0,1.1))
+text(ordered_df_system$rank, ordered_df_system$stats, labels = ordered_df_system$factor, pos = 3, cex = 0.6)
 abline(h = c(0.3,0.5,0.7), col = "red", lty = 2)
 par(mfrow = c(1,1))
 ```
 
 
+From the plot, each factor is perfectly associated with traits. For affected system, k5, k4, k1, and k8 are perfectly associated with affected system, whereas k2, k6, and k7 have moderate association with affected system. 
+
+Now, plot the structure plot by cutting off the factors with $R^2$ less than 0.7
+
+```{r affected-system-0.7}
+source('../code/plot_factors.R')
+
+anno_data <- plot_factor_annotation_data(F, affected_system)
+factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.7])
+F_ordered <- anno_data$F_ordered[, factors_to_plot]
+# Create heatmap
+p_snmf_grouping1 <- pheatmap::pheatmap(
+  F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "Semi-NMF Factors by Affected Biological System",
+  color = colorRampPalette(c("white", "#21908CFF"))(100)
+)
+
+p_snmf_grouping1
+```
 
 
+Then, plot the structure plot by cutting off the factors with $R^2$ less than 0.5.
+
+```{r affected-system-0.7}
+factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.5])
+F_ordered <- anno_data$F_ordered[, factors_to_plot]
+# Create heatmap
+p_snmf_grouping2 <- pheatmap::pheatmap(
+  F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "Semi-NMF Factors by Affected Biological System",
+  color = colorRampPalette(c("white", "#21908CFF"))(100)
+)
+
+p_snmf_grouping2
+```
+
+
+Also, plot the structure plot by cutting off the factors with $R^2$ less than 0.3.
+
+```{r affected-system-0.7}
+factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.3])
+F_ordered <- anno_data$F_ordered[, factors_to_plot]
+# Create heatmap
+p_snmf_grouping3 <- pheatmap::pheatmap(
+  F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "Semi-NMF Factors by Affected Biological System",
+  color = colorRampPalette(c("white", "#21908CFF"))(100)
+)
+
+p_snmf_grouping3
+```
+
+
+#### flashier Laplace MF 
+
+Similary, we will try grouping factors by using this ANOVA method. 
+
+
+```{r, results="hide", message=FALSE, warning=FALSE, fig.height=6, fig.width=8}
+F <- fl_mf_ldf$F
+k <- ncol(F)
+colnames(F) <- paste0("k",1:k)
+
+traits <- rownames(F)
+affected_system <- c(
+  "gastrointestinal", "Skin", "joints_muscles", 
+  "spine_sacroiliac_joints", "nervous", 
+  "gastrointestinal", "gastrointestinal", 
+  "gastrointestinal", "multiple", 
+  "nervous", "endocrine_glands"
+)
+```
+
+Take a look at the elbow plot:
+
+```{r, results="hide", message=FALSE, warning=FALSE, fig.height=8, fig.width=8}
+ordered_df_traits <- ANOVA_factors(F, traits, stats = "R2")
+ordered_df_system <- ANOVA_factors(F, affected_system, stats = "R2")
+par(mfrow = c(2,1))
+plot(ordered_df_traits$rank, ordered_df_traits$stats, type = "o", xlab = "Rank", ylab = "R2", main = "Traits", ylim = c(0,1.1))
+text(ordered_df_traits$rank, ordered_df_traits$stats, labels = ordered_df_traits$factor, pos = 3, cex = 0.6)
+abline(h = c(0.3,0.5,0.7), col = "red", lty = 2)
+plot(ordered_df_system$rank, ordered_df_system$stats, type = "o", xlab = "Rank", ylab = "R2", main = "Afftected System", ylim = c(0,1.1))
+text(ordered_df_system$rank, ordered_df_system$stats, labels = ordered_df_system$factor, pos = 3, cex = 0.6)
+abline(h = c(0.3,0.5,0.7), col = "red", lty = 2)
+par(mfrow = c(1,1))
+```
+
+
+From the plot, each factor is perfectly associated with traits. For affected system, k5, k2, k1, and k8 are perfectly associated with affected system, whereas k3, k7, and k6 have moderate association with affected system. 
+
+Now, plot the structure plot by cutting off the factors with $R^2$ less than 0.7
+
+```{r affected-system-0.7}
+anno_data <- plot_factor_annotation_data(F, affected_system)
+factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.7])
+F_ordered <- anno_data$F_ordered[, factors_to_plot]
+# Create heatmap
+p_mf_grouping1 <- pheatmap::pheatmap(
+  F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "MF Factors by Affected System",
+  color = colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100)
+)
+
+p_mf_grouping1
+```
+
+
+Then, plot the structure plot by cutting off the factors with $R^2$ less than 0.5.
+
+```{r affected-system-0.7}
+factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.5])
+F_ordered <- anno_data$F_ordered[, factors_to_plot]
+# Create heatmap
+p_mf_grouping2 <- pheatmap::pheatmap(
+  F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "MF Factors by Affected System",
+  color = colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100)
+)
+
+p_mf_grouping2
+```
+
+
+Also, plot the structure plot by cutting off the factors with $R^2$ less than 0.3.
+
+```{r affected-system-0.7}
+factors_to_plot <- paste0("k", ordered_df_system$factor[ordered_df_system$stats > 0.3])
+F_ordered <- anno_data$F_ordered[, factors_to_plot]
+# Create heatmap
+p_mf_grouping3 <- pheatmap::pheatmap(
+  F_ordered,
+  annotation_row = anno_data$annotation_df,
+  annotation_colors = anno_data$annotation_colors,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE,
+  scale = 'none',
+  show_colnames = TRUE,
+  border_color = "white",
+  main = "MF Factors by Affected System",
+  color = colorRampPalette(c("#440154FF", "white", "#21908CFF"))(100)
+)
+
+p_mf_grouping3
+```
 
 
 
