@@ -1,0 +1,133 @@
+---
+title: "Exploring loadings of the autoimmune GWAS data"
+author: "Zining Qi"
+output: workflowr::wflow_html
+editor_options: 
+  chunk_output_type: console
+---
+
+This page is to check individual example for the preliminary results to see if results make sense. For example, we could pick out some variants have high loadings that sharing among traits. And then make forest plot for effect size and standard error for each trait.
+
+```{r setup, include=FALSE}
+# Set knitr options for consistent output formatting
+knitr::opts_chunk$set(
+  comment = "#",
+  collapse = TRUE,
+  results = "hold",
+  fig.align = "center",
+  dpi = 120
+)
+```
+
+```{r load-packages, message=FALSE}
+# Load required packages
+library(tidyverse)    # For data manipulation and visualization
+library(data.table)   # For efficient data reading and processing
+library(pheatmap)
+```
+
+Load flash objects which have loadings and factors and dataframe with effect size and standard error of variants. 
+```{r}
+load('../data/autoimmune_combined_results.RData')
+load('../output/immune_snmf_factors.RData')
+```
+
+
+Extract high loading variants for each loadings
+
+```{r}
+L <- fl_snmf_ldf$L
+colnames(L) <- c(paste0('k', 1:ncol(L)))
+
+L_df <- as.data.frame(L) %>%
+  rownames_to_column("variant_id") %>%
+  pivot_longer(cols = -variant_id, 
+               names_to = "factor", 
+               values_to = "loading")
+
+merged_data <- combined_results %>%
+  inner_join(L_df, by = "variant_id")
+
+# Get top N variants per factor
+top_variants_per_factor <- L_df %>%
+  group_by(factor) %>%
+  arrange(desc(abs(loading))) %>%
+  slice_head(n = 10) %>%  # Top 5 variants per factor
+  ungroup()
+```
+
+
+```{r}
+# Get top 5 variants per factor
+top_variants <- L_df %>%
+  group_by(factor) %>%
+  arrange(desc(abs(loading))) %>%
+  slice(1:5) %>%  # Top 5 variants per factor
+  ungroup()
+
+# Merge with effect data
+plot_data <- combined_results %>%
+  inner_join(top_variants, by = "variant_id") %>%
+  mutate(
+    ci_low = beta - 1.96 * standard_error,
+    ci_high = beta + 1.96 * standard_error,
+    # Label for the variant (shows loading value)
+    variant_label = paste0(variant_id, " (λ=", round(loading, 2), ")")
+  )
+```
+
+
+```{r}
+plot_single_variant <- function(variant_data) {
+  # Prepare labels
+  label_text <- cbind(
+    c("Trait", variant_data$disease),
+    c("Effect [95% CI]", 
+      sprintf("%.2f [%.2f, %.2f]", 
+              variant_data$beta, 
+              variant_data$ci_low, 
+              variant_data$ci_high))
+  )
+  
+  forestplot(
+    labeltext = label_text,
+    mean = c(NA, variant_data$beta),
+    lower = c(NA, variant_data$ci_low),
+    upper = c(NA, variant_data$ci_high),
+    title = paste("Variant:", variant_data$variant_label[1], 
+                 "\nFactor:", variant_data$factor[1]),
+    xticks = seq(round(min(variant_data$ci_low))-0.1, round(max(variant_data$ci_high))+0.1, 0.05),
+    boxsize = 0.2,
+    lineheight = unit(0.8, "cm"),
+    col = fpColors(box = "royalblue", line = "darkblue", summary = "royalblue"),
+    graphwidth = unit(6, "cm"),
+    clip = c(-1, 1)  # Force consistent x-axis limits
+  )
+}
+
+nested_plots <- plot_data %>%
+  group_by(factor, variant_id) %>%
+  group_split()
+
+plot_single_variant(nested_plots[[1]])
+
+all_plots <- map(nested_plots, plot_single_variant)
+
+walk2(all_plots, nested_plots, ~{
+  factor_dir <- file.path("../output/forest_plots", unique(.y$factor))
+  if (!dir.exists(factor_dir)) dir.create(factor_dir, recursive = TRUE)
+  
+  png(file.path(factor_dir, paste0(unique(.y$variant_id), ".png")),
+      width = 1200, height = 800, res = 150)
+  print(.x)
+  dev.off()
+})
+```
+
+
+
+
+
+
+
+
