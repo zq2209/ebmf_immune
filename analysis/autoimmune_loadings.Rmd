@@ -24,19 +24,24 @@ knitr::opts_chunk$set(
 library(tidyverse)    # For data manipulation and visualization
 library(data.table)   # For efficient data reading and processing
 library(pheatmap)
+
+library(png)
+library(grid)
+library(gridExtra)
 ```
 
 Load flash objects which have loadings and factors and dataframe with effect size and standard error of variants. 
 ```{r}
 load('../data/autoimmune_combined_results.RData')
 load('../output/immune_snmf_factors.RData')
+load('../output/immune_mf_factors.RData')
 ```
 
 
 Extract high loading variants for each loadings
 
 ```{r}
-L <- fl_snmf_ldf$L
+L <- fl_mf_ldf$L
 colnames(L) <- c(paste0('k', 1:ncol(L)))
 
 L_df <- as.data.frame(L) %>%
@@ -49,10 +54,10 @@ merged_data <- combined_results %>%
   inner_join(L_df, by = "variant_id")
 
 # Get top N variants per factor
-top_variants_per_factor <- L_df %>%
+top_variants_mf <- L_df %>%
   group_by(factor) %>%
   arrange(desc(abs(loading))) %>%
-  slice_head(n = 10) %>%  # Top 5 variants per factor
+  slice_head(n = 1) %>%  # Top 5 variants per factor
   ungroup()
 ```
 
@@ -125,9 +130,40 @@ walk2(all_plots, nested_plots, ~{
 ```
 
 
+```{r}
+# Get path of all png files
+snmf_png_files <- file.path("..", "output", "forest_plots", "snmf", 
+                         top_variants_snmf$factor, 
+                         paste0(top_variants_snmf$variant_id, ".png"))
+
+# Read images into a list
+# Load PNGs as raster objects
+plots <- lapply(snmf_png_files, function(x) {
+  img <- readPNG(x)
+  rasterGrob(img, interpolate = TRUE)
+})
+
+# Arrange in a grid (e.g., 4x2)
+grid.arrange(grobs = plots, ncol = 2)
+```
 
 
+```{r}
+# Get path of all png files
+mf_png_files <- file.path("..", "output", "forest_plots", "mf", 
+                         top_variants_mf$factor, 
+                         paste0(top_variants_mf$variant_id, ".png"))
 
+# Read images into a list
+# Load PNGs as raster objects
+plots <- lapply(mf_png_files, function(x) {
+  img <- readPNG(x)
+  rasterGrob(img, interpolate = TRUE)
+})
+
+# Arrange in a grid (e.g., 4x2)
+grid.arrange(grobs = plots, ncol = 2)
+```
 
 
 

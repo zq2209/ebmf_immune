@@ -1,0 +1,451 @@
+---
+title: "Matrix factorization of significant signals"
+author: "Zining Qi"
+output: workflowr::wflow_html
+---
+
+This analysis processes genome-wide association study (GWAS) data for multiple autoimmune diseases obtained from the [GWAS Catalog](https://www.ebi.ac.uk/gwas/). The goal is to prepare the data for subsequent analyses by:
+
+1. Identifying variants common across all traits
+2. Extracting effect sizes ($\beta$) and standard errors
+3. Cleaning and organizing the data
+4. Visualizing distributions
+5. Creating analysis-ready matrices
+
+The complete list of autoimmune diseases included can be found [here](https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0).
+
+### Setup
+
+First, we load required packages and set knitr options:
+
+```{r setup, include=FALSE}
+# Set knitr options for consistent output formatting
+knitr::opts_chunk$set(
+  comment = "#",
+  collapse = TRUE,
+  results = "hold",
+  fig.align = "center",
+  dpi = 120
+)
+```
+
+```{r load-packages, message=FALSE}
+# Load required packages
+library(tidyverse)    # For data manipulation and visualization
+library(data.table)   # For efficient data reading and processing
+library(pheatmap)
+library(forestplot)
+
+# Data manipulation and visualization
+library(tidyverse)
+library(reshape2)
+library(cowplot)
+library(viridis)
+
+# Matrix factorization tools
+library(flashier)
+library(fastTopics)
+
+```
+
+### Identify Significant Variants Across Studies
+
+This step is to find genetic variants that are present in all GWAS studies to enable cross-study comparisons.
+
+```{r find-common-variants, eval=FALSE}
+# List all GWAS data files
+files <- list.files(pattern = "\\.h\\.tsv$")
+
+# Initialize with variants from first file
+common_variants <- fread(files[1], select = "variant_id")[[1]]
+
+# Initialize lists to store results
+results_list <- list()
+duplicate_report <- list()
+significant_variants_list <- list()
+
+for (file in files[c(-12, -13)]) {
+  # Read relevant columns
+  gwas_data <- fread(file, select = c("variant_id", "beta", "standard_error"))
+  
+  # Filter to common variants and compute Z-scores
+  filtered_data <- gwas_data %>% 
+    filter(variant_id %in% common_variants) %>%
+    mutate(
+      source = gsub("\\.h\\.tsv$", "", file),
+      z_hat = beta / standard_error
+    )
+  
+  # Identify and report duplicates
+  dup_variants <- filtered_data$variant_id[duplicated(filtered_data$variant_id)]
+  if(length(dup_variants) > 0) {
+    duplicate_report[[file]] <- data.table(
+      file = file,
+      variant_id = unique(dup_variants),
+      n_duplicates = table(filtered_data$variant_id)[unique(dup_variants)]
+    )
+  }
+  
+  # Keep only first occurrence of each variant
+  results_list[[file]] <- filtered_data[!duplicated(filtered_data$variant_id), ]
+  
+  # Select significant variants (|Z-score| > 1.96 for p < 0.05)
+  significant_variants <- filtered_data %>%
+    filter(abs(z_hat) > 1.96) %>%  # Change threshold as needed
+    select(variant_id, beta, standard_error, z_hat) %>%
+    mutate(source = gsub("\\.h\\.tsv$", "", file))
+  
+  significant_variants_list[[file]] <- significant_variants
+}
+
+# Combine all studies
+combined_results <- bind_rows(results_list)
+
+# Combine all significant variants
+significant_variants_df <- bind_rows(significant_variants_list)
+```
+
+Final number of overlapping variants are over 18000. Two traits were dropped because the overlapping of these two traits will be too low. 
+
+
+### Map Study IDs to Disease Names
+
+Then, replace study identifiers with meaningful disease names for clearer interpretation.
+
+```{r map-diseases, eval=FALSE}
+# Create study-to-disease mapping
+study_to_disease <- data.frame(
+  source = c("20190752-GCST000612-EFO_0001060",
+             "23749187-GCST005529-EFO_0003898",
+             "26192919-GCST003044-EFO_0000384",
+             "27329760-GCST003724-EFO_0000289",
+             "23143594-GCST005527-EFO_0000676",
+             "24076602-GCST005531-EFO_0003885",
+             "26192919-GCST003045-EFO_0000729",
+             "33830302-GCST90000529-EFO_0001359",
+             "23143596-GCST005569-EFO_0000685",
+             "26192919-GCST003043-EFO_0003767",
+             "26502338-GCST003156-EFO_0002690"),
+  disease = c("celiac_disease",
+              "ankylosing_spondylitis",
+              "crohns_disease",
+              "biopolar_disorder",
+              "psoriasis",
+              "multiple_sclerosis",
+              "ulcerative_colitis",
+              "type_1_diabetes",
+              "rheumatoid_arthritis",
+              "inflammatory_bowel_disease",
+              "systemic_lupus_erythematosus")
+)
+
+# Merge mapping with results
+combined_results <- merge(combined_results, study_to_disease, by = "source", all.x = TRUE)
+
+# Save processed data
+save(combined_results, file = '../data/autoimmune_significant_variants.RData')
+```
+
+
+### Create Analysis-Ready Matrices
+
+This step is to reshape data into variant-by-disease matrices for downstream analysis.
+
+```{r}
+load('../data/autoimmune_combined_results.RData')
+
+significant_variants_df <- combined_results %>% 
+  filter(abs(z_hat) > 0)
+```
+
+
+```{r create-matrices}
+# Create variant-by-disease beta matrix
+beta_matrix <- significant_variants_df %>%
+  pivot_wider(
+    id_cols = variant_id,
+    names_from = disease,
+    values_from = beta,
+    values_fill = NA
+  ) %>% 
+  as.data.frame() %>%
+  column_to_rownames("variant_id") 
+
+z_matrix <- significant_variants_df %>%
+  pivot_wider(
+    id_cols = variant_id,
+    names_from = disease,  # Changed from 'disease' to 'source' to match your previous code
+    values_from = z_hat,
+    values_fill = NA  # This explicitly fills missing combinations with NA
+  ) %>% 
+  as.data.frame() %>%
+  column_to_rownames("variant_id")
+
+# Save in multiple formats
+#save(beta_matrix, file = "beta_matrix.RData")
+#fwrite(beta_matrix, row.names = TRUE, file = "beta_matrix.csv")
+```
+
+
+## Semi-Nonnegative Matrix Factorization (semi-NMF)
+
+Factorize the effect size matrix into latent factors using semi-NMF, which allows for capturing only same direction of the disease mechanism.
+
+```{r}
+Y <- as.matrix(z_matrix)
+```
+
+```{r semi-nmf, message=FALSE, eval=FALSE}
+# Calculate trait-specific variances
+var_per_trait <- apply(Y, 2, var, na.rm = TRUE)
+s1 <- 0.1 * min(var_per_trait, na.rm = TRUE)  # Set minimum variance threshold
+
+# Initialize timing
+timings <- list()
+
+# Run semi-NMF
+t0 <- proc.time()
+fl0 <- flash(Y,
+             ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential),
+             var_type = 0,
+             greedy_Kmax = 40,
+             nullcheck = FALSE,
+             backfit = FALSE,
+             verbose = 3)
+
+# Refine with proper variance structure
+fl_snmf <- flash_init(Y, var_type = 2, S = s1)
+fl_snmf <- flash_factors_init(fl_snmf, fl0, 
+                            ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential))
+fl_snmf <- flash_backfit(fl_snmf, extrapolate = FALSE, maxiter = 100, verbose = 3)
+fl_snmf <- flash_backfit(fl_snmf, extrapolate = TRUE, maxiter = 100, verbose = 3)
+t1 <- proc.time()
+
+# Record timing
+timings$fl_snmf <- t1 - t0
+print(timings$fl_snmf)
+
+# user     system  elapsed 
+# 32.144   2.479  35.119 
+```
+
+
+### Matrix Factorization with Laplace Priors
+
+Decompose the matrix using Laplace priors for both loadings and factors, which encourages capturing both positive and negative direction of the disease mechanism.
+
+```{r laplace-mf, message=FALSE, eval=FALSE}
+t0 <- proc.time()
+fl0_mf <- flash(Y,
+                ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
+                var_type = 0,
+                greedy_Kmax = 40,
+                nullcheck = FALSE,
+                backfit = FALSE,
+                verbose = 3)
+
+# Refine with proper variance structure
+fl_mf <- flash_init(Y, var_type = 2, S = s1)
+fl_mf <- flash_factors_init(fl_mf, fl0_mf, 
+                          ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace))
+fl_mf <- flash_backfit(fl_mf, extrapolate = FALSE, maxiter = 100, verbose = 3)
+fl_mf <- flash_backfit(fl_mf, extrapolate = TRUE, maxiter = 100, verbose = 3)
+t1 <- proc.time()
+
+# Record timing
+timings$fl_mf <- t1 - t0
+print(timings$fl_mf)
+
+# user    system  elapsed 
+# 131.145   9.444 142.150 
+```
+
+Save the factor loadings for downstream analysis.
+
+```{r save-factors, eval=FALSE}
+# Extract and save factor loadings
+fl_mf_ldf <- ldf(fl_mf, type = "i")
+fl_snmf_ldf <- ldf(fl_snmf, type = "i")
+
+save(fl_snmf_ldf, file = "../output/immune_snmf_factors_sig.RData")
+save(fl_mf_ldf, file = "../output/immune_mf_factors_sig.RData")
+```
+
+### Explore and Visualize Factors
+
+```{r load-factors}
+load("../output/immune_mf_factors_sig.RData")
+load("../output/immune_snmf_factors_sig.RData")
+```
+
+#### Heatmap Visualization of Factors
+
+Visualization showing factor effects across traits by heatmap.
+
+```{r factor-heatmaps}
+source('../code/plot_factors.R')
+
+# Plot semi-NMF factors
+F_snmf <- fl_snmf_ldf$F
+p_snmf <- plot_factors(F_snmf, row_names = rownames(F_snmf),
+                      col_names = paste0("k", 1:ncol(F_snmf))) +
+          scale_fill_gradient2(low = viridis(3)[1], 
+                              high = viridis(3)[2], 
+                              name = "Factor Effect") +
+          xlab("Factor") +
+          ggtitle("Semi-NMF Factors") +
+          scale_x_discrete(position = "top") +
+          theme(axis.text.x = element_text(angle = 0),
+                panel.background = element_rect(fill = "white"),
+                axis.ticks = element_blank())
+
+# Plot Laplace MF factors
+F_mf <- fl_mf_ldf$F
+p_mf <- plot_factors(F_mf, row_names = rownames(F_mf),
+                    col_names = paste0("k", 1:ncol(F_mf))) +
+        scale_fill_gradient2(low = viridis(3)[1], 
+                            high = viridis(3)[2], 
+                            name = "Factor Effect") +
+        xlab("Factors") +
+        ggtitle("Laplace MF Factors") +
+        scale_x_discrete(position = "top") +
+        theme(axis.text.x = element_text(angle = 0),
+              panel.background = element_rect(fill = "white"),
+              axis.ticks = element_blank())
+
+# Combine plots
+plot_grid(p_snmf, p_mf, nrow = 2, ncol = 1)
+```
+
+### Visualization of Loadings
+
+Extract high loading variants for each loadings
+
+```{r}
+L <- fl_mf_ldf$L
+colnames(L) <- c(paste0('k', 1:ncol(L)))
+
+L_df <- as.data.frame(L) %>%
+  rownames_to_column("variant_id") %>%
+  pivot_longer(cols = -variant_id, 
+               names_to = "factor", 
+               values_to = "loading")
+
+merged_data <- combined_results %>%
+  inner_join(L_df, by = "variant_id")
+
+# Get top N variants per factor
+top_variants_mf <- L_df %>%
+  group_by(factor) %>%
+  arrange(desc(abs(loading))) %>%
+  slice_head(n = 1) %>%  # Top 5 variants per factor
+  ungroup()
+```
+
+
+```{r}
+# Get top 5 variants per factor
+top_variants <- L_df %>%
+  group_by(factor) %>%
+  arrange(desc(abs(loading))) %>%
+  slice(1:5) %>%  # Top 5 variants per factor
+  ungroup()
+
+# Merge with effect data
+plot_data <- combined_results %>%
+  inner_join(top_variants, by = "variant_id") %>%
+  mutate(
+    ci_low = beta - 1.96 * standard_error,
+    ci_high = beta + 1.96 * standard_error,
+    # Label for the variant (shows loading value)
+    variant_label = paste0(variant_id, " (λ=", round(loading, 2), ")")
+  )
+```
+
+
+```{r}
+plot_single_variant <- function(variant_data) {
+  # Prepare labels
+  label_text <- cbind(
+    c("Trait", variant_data$disease),
+    c("Effect [95% CI]", 
+      sprintf("%.2f [%.2f, %.2f]", 
+              variant_data$beta, 
+              variant_data$ci_low, 
+              variant_data$ci_high))
+  )
+  
+  forestplot(
+    labeltext = label_text,
+    mean = c(NA, variant_data$beta),
+    lower = c(NA, variant_data$ci_low),
+    upper = c(NA, variant_data$ci_high),
+    title = paste("Variant:", variant_data$variant_label[1], 
+                 "\nFactor:", variant_data$factor[1]),
+    xticks = seq(round(min(variant_data$ci_low))-0.1, round(max(variant_data$ci_high))+0.1, 0.05),
+    boxsize = 0.2,
+    lineheight = unit(0.8, "cm"),
+    col = fpColors(box = "royalblue", line = "darkblue", summary = "royalblue"),
+    graphwidth = unit(6, "cm"),
+    clip = c(-1, 1)  # Force consistent x-axis limits
+  )
+}
+
+nested_plots <- plot_data %>%
+  group_by(factor, variant_id) %>%
+  group_split()
+
+plot_single_variant(nested_plots[[1]])
+
+all_plots <- map(nested_plots, plot_single_variant)
+
+walk2(all_plots, nested_plots, ~{
+  factor_dir <- file.path("../output/forest_plots/significant_signals/mf/", unique(.y$factor))
+  if (!dir.exists(factor_dir)) dir.create(factor_dir, recursive = TRUE)
+  
+  png(file.path(factor_dir, paste0(unique(.y$variant_id), ".png")),
+      width = 1200, height = 800, res = 150)
+  print(.x)
+  dev.off()
+})
+```
+
+
+```{r}
+# Get path of all png files
+snmf_png_files <- file.path("..", "output", "forest_plots", "significant_signals", "snmf", 
+                         top_variants_snmf$factor, 
+                         paste0(top_variants_snmf$variant_id, ".png"))
+
+# Read images into a list
+# Load PNGs as raster objects
+plots <- lapply(snmf_png_files, function(x) {
+  img <- readPNG(x)
+  rasterGrob(img, interpolate = TRUE)
+})
+
+# Arrange in a grid (e.g., 4x2)
+grid.arrange(grobs = plots, ncol = 2)
+```
+
+
+```{r}
+# Get path of all png files
+mf_png_files <- file.path("..", "output", "forest_plots", "significant_signals", "mf", 
+                         top_variants_mf$factor, 
+                         paste0(top_variants_mf$variant_id, ".png"))
+
+# Read images into a list
+# Load PNGs as raster objects
+plots <- lapply(mf_png_files, function(x) {
+  img <- readPNG(x)
+  rasterGrob(img, interpolate = TRUE)
+})
+
+# Arrange in a grid (e.g., 4x2)
+grid.arrange(grobs = plots, ncol = 2)
+```
+
+
+
+
