@@ -432,15 +432,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree89c551561895a39e88421f5b331f1d623fc6c082targetblank89c5515a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree8c7519bec058e5a05f508b18f0bcfd1438e1d974targetblank8c7519ba">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/zq2209/ebmf_immune/tree/89c551561895a39e88421f5b331f1d623fc6c082" target="_blank">89c5515</a>
+<a href="https://github.com/zq2209/ebmf_immune/tree/8c7519bec058e5a05f508b18f0bcfd1438e1d974" target="_blank">8c7519b</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree89c551561895a39e88421f5b331f1d623fc6c082targetblank89c5515a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomzq2209ebmfimmunetree8c7519bec058e5a05f508b18f0bcfd1438e1d974targetblank8c7519ba"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -450,7 +450,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/zq2209/ebmf_immune/tree/89c551561895a39e88421f5b331f1d623fc6c082" target="_blank">89c5515</a>.
+<a href="https://github.com/zq2209/ebmf_immune/tree/8c7519bec058e5a05f508b18f0bcfd1438e1d974" target="_blank">8c7519b</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -511,6 +511,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/zq2209/ebmf_immune/blob/8c7519bec058e5a05f508b18f0bcfd1438e1d974/analysis/autoimmune_factors_z.Rmd" target="_blank">8c7519b</a>
+</td>
+<td>
+zq2209
+</td>
+<td>
+2025-06-09
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zq2209/ebmf_immune/ac8f46fdaf2c944b0d7fff480ca671b5863f98c9/docs/autoimmune_factors_z.html" target="_blank">ac8f46f</a>
+</td>
+<td>
+zq2209
+</td>
+<td>
+2025-06-09
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -785,26 +819,16 @@ snmf_res_long &lt;- as.data.frame(snmf_res) %&gt;%
   pivot_longer(-variant, names_to = &quot;trait&quot;, values_to = &quot;residual&quot;)
 
 ggplot(snmf_res_long, aes(x = residual)) +
-  # Histogram (counts)
   geom_histogram(
-    aes(y = after_stat(count)),  # Just show raw counts
-    bins = 30, 
-    fill = &quot;skyblue&quot;, 
+    bins = 30,
+    fill = &quot;skyblue&quot;,
     color = &quot;white&quot;,
     alpha = 0.7
   ) +
-  # # Density line (scaled to match histogram)
-  # geom_density(
-  #   aes(y = after_stat(count)),  # Scale density to counts
-  #   color = &quot;darkblue&quot;, 
-  #   linewidth = 1,
-  #   adjust = 1.5
-  # ) +
   geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, color = &quot;red&quot;) +
-  facet_wrap(~trait, scales = &quot;free_y&quot;) +
   labs(
-    title = &quot;Residual Histograms with Density Curves&quot;,
-    x = &quot;Residual Value&quot;, 
+    title = &quot;Distribution of Residuals (All Traits Combined)&quot;,
+    x = &quot;Residual Value&quot;,
     y = &quot;Count&quot;
   ) +
   theme_minimal()
@@ -848,6 +872,43 @@ zq2209
 </table>
 </div>
 </div>
+<pre class="r"><code>
+# Create QQ-plot
+qqnorm(snmf_res_long$residual,
+       main = &quot;QQ-Plot of Residuals (All Traits)&quot;,
+       col = &quot;skyblue&quot;,
+       pch = 17,
+       cex = 0.8)
+qqline(snmf_res_long$residual, col = &quot;red&quot;, lwd = 1.5)</code></pre>
+<p><img src="figure/autoimmune_factors_z.Rmd/unnamed-chunk-1-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>
+ggplot(snmf_res_long, aes(x = residual)) +
+  # Histogram (counts)
+  geom_histogram(
+    aes(y = after_stat(count)),  # Just show raw counts
+    bins = 30, 
+    fill = &quot;skyblue&quot;, 
+    color = &quot;white&quot;,
+    alpha = 0.7
+  ) +
+  # # Density line (scaled to match histogram)
+  # geom_density(
+  #   aes(y = after_stat(count)),  # Scale density to counts
+  #   color = &quot;darkblue&quot;, 
+  #   linewidth = 1,
+  #   adjust = 1.5
+  # ) +
+  geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, color = &quot;red&quot;) +
+  facet_wrap(~trait, scales = &quot;free_y&quot;) +
+  labs(
+    title = &quot;Residual Histograms with Density Curves&quot;,
+    x = &quot;Residual Value&quot;, 
+    y = &quot;Count&quot;
+  ) +
+  theme_minimal()
+# Warning: Removed 2369 rows containing non-finite outside the scale range
+# (`stat_bin()`).</code></pre>
+<p><img src="figure/autoimmune_factors_z.Rmd/unnamed-chunk-1-3.png" width="840" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># Set up the plotting grid (3 rows x 4 columns)
 par(mfrow = c(3, 4))  # mar adjusts margins (bottom, left, top, right)
 
@@ -933,26 +994,16 @@ mf_res_long &lt;- as.data.frame(mf_res) %&gt;%
   pivot_longer(-variant, names_to = &quot;trait&quot;, values_to = &quot;residual&quot;)
 
 ggplot(mf_res_long, aes(x = residual)) +
-  # Histogram (counts)
   geom_histogram(
-    aes(y = after_stat(count)),  # Just show raw counts
-    bins = 30, 
-    fill = &quot;skyblue&quot;, 
+    bins = 30,
+    fill = &quot;skyblue&quot;,
     color = &quot;white&quot;,
     alpha = 0.7
   ) +
-  # # Density line (scaled to match histogram)
-  # geom_density(
-  #   aes(y = after_stat(count)),  # Scale density to counts
-  #   color = &quot;darkblue&quot;, 
-  #   linewidth = 1,
-  #   adjust = 1.5
-  # ) +
   geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, color = &quot;red&quot;) +
-  facet_wrap(~trait, scales = &quot;free_y&quot;) +
   labs(
-    title = &quot;Residual Histograms with Density Curves&quot;,
-    x = &quot;Residual Value&quot;, 
+    title = &quot;Distribution of Residuals (All Traits Combined)&quot;,
+    x = &quot;Residual Value&quot;,
     y = &quot;Count&quot;
   ) +
   theme_minimal()
@@ -996,6 +1047,43 @@ zq2209
 </table>
 </div>
 </div>
+<pre class="r"><code>
+# Create QQ-plot
+qqnorm(mf_res_long$residual,
+       main = &quot;QQ-Plot of Residuals (All Traits)&quot;,
+       col = &quot;skyblue&quot;,
+       pch = 17,
+       cex = 0.8)
+qqline(mf_res_long$residual, col = &quot;red&quot;, lwd = 1.5)</code></pre>
+<p><img src="figure/autoimmune_factors_z.Rmd/unnamed-chunk-3-2.png" width="840" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>
+ggplot(mf_res_long, aes(x = residual)) +
+  # Histogram (counts)
+  geom_histogram(
+    aes(y = after_stat(count)),  # Just show raw counts
+    bins = 30, 
+    fill = &quot;skyblue&quot;, 
+    color = &quot;white&quot;,
+    alpha = 0.7
+  ) +
+  # # Density line (scaled to match histogram)
+  # geom_density(
+  #   aes(y = after_stat(count)),  # Scale density to counts
+  #   color = &quot;darkblue&quot;, 
+  #   linewidth = 1,
+  #   adjust = 1.5
+  # ) +
+  geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, color = &quot;red&quot;) +
+  facet_wrap(~trait, scales = &quot;free_y&quot;) +
+  labs(
+    title = &quot;Residual Histograms with Density Curves&quot;,
+    x = &quot;Residual Value&quot;, 
+    y = &quot;Count&quot;
+  ) +
+  theme_minimal()
+# Warning: Removed 2369 rows containing non-finite outside the scale range
+# (`stat_bin()`).</code></pre>
+<p><img src="figure/autoimmune_factors_z.Rmd/unnamed-chunk-3-3.png" width="840" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># Set up the plotting grid (3 rows x 4 columns)
 par(mfrow = c(3, 4))  # mar adjusts margins (bottom, left, top, right)
 
