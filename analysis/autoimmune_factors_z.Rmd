@@ -207,6 +207,29 @@ snmf_res_long <- as.data.frame(snmf_res) %>%
   pivot_longer(-variant, names_to = "trait", values_to = "residual")
 
 ggplot(snmf_res_long, aes(x = residual)) +
+  geom_histogram(
+    bins = 30,
+    fill = "skyblue",
+    color = "white",
+    alpha = 0.7
+  ) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
+  labs(
+    title = "Distribution of Residuals (All Traits Combined)",
+    x = "Residual Value",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+# Create QQ-plot
+qqnorm(snmf_res_long$residual,
+       main = "QQ-Plot of Residuals (All Traits)",
+       col = "skyblue",
+       pch = 17,
+       cex = 0.8)
+qqline(snmf_res_long$residual, col = "red", lwd = 1.5)
+
+ggplot(snmf_res_long, aes(x = residual)) +
   # Histogram (counts)
   geom_histogram(
     aes(y = after_stat(count)),  # Just show raw counts
@@ -279,6 +302,29 @@ mf_res <- residuals(fl_mf)
 mf_res_long <- as.data.frame(mf_res) %>%
   rownames_to_column("variant") %>%
   pivot_longer(-variant, names_to = "trait", values_to = "residual")
+
+ggplot(mf_res_long, aes(x = residual)) +
+  geom_histogram(
+    bins = 30,
+    fill = "skyblue",
+    color = "white",
+    alpha = 0.7
+  ) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
+  labs(
+    title = "Distribution of Residuals (All Traits Combined)",
+    x = "Residual Value",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+# Create QQ-plot
+qqnorm(mf_res_long$residual,
+       main = "QQ-Plot of Residuals (All Traits)",
+       col = "skyblue",
+       pch = 17,
+       cex = 0.8)
+qqline(mf_res_long$residual, col = "red", lwd = 1.5)
 
 ggplot(mf_res_long, aes(x = residual)) +
   # Histogram (counts)
