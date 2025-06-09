@@ -1,0 +1,351 @@
+---
+title: "Factor Analysis of Autoimmune GWAS Data using flashier on Z-Score"
+author: "Zining Qi"
+output: workflowr::wflow_html
+editor_options: 
+  chunk_output_type: console
+---
+
+This analysis applies Empirical Bayes Matrix Factorization methods to genome-wide association study (GWAS) data for multiple autoimmune diseases. We use the `flashier` package to:
+
+1. Perform semi-NMF matrix factorization (semi-NMF) on z-score instead of beta
+2. Perform matrix factorization with Laplace priors for both L and F on z-score instead of beta
+3. Compare and visualize the resulting factors
+4. Explore factor-trait relationships by affected biological systems
+
+### Setup
+
+Load required packages and data:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment = "#",
+  collapse = TRUE,
+  results = "hold",
+  fig.align = "center",
+  dpi = 120
+)
+```
+
+```{r load-packages-data, message=FALSE}
+# Data manipulation and visualization
+library(tidyverse)
+library(reshape2)
+library(cowplot)
+library(viridis)
+library(pheatmap)
+
+# Matrix factorization tools
+library(flashier)
+library(fastTopics)
+
+# Load preprocessed GWAS effect size matrix
+load("../data/z_matrix.RData")
+```
+
+### Data Overview
+
+The input data is a matrix of GWAS effect sizes ($\beta$) where:
+
+- Rows represent genetic variants
+- Columns represent autoimmune diseases
+
+```{r view-data}
+# Preview the data structure
+head(z_matrix[, 1:5])
+
+# Convert to matrix format for flashier
+Y <- as.matrix(z_matrix)
+```
+
+## Semi-Nonnegative Matrix Factorization (semi-NMF)
+
+Factorize the effect size matrix into latent factors using semi-NMF, which allows for capturing only same direction of the disease mechanism.
+
+
+```{r semi-nmf, message=FALSE, eval=FALSE}
+# Calculate trait-specific variances
+var_per_trait <- apply(Y, 2, var, na.rm = TRUE)
+s1 <- 0.1 * min(var_per_trait, na.rm = TRUE)  # Set minimum variance threshold
+
+# Initialize timing
+timings <- list()
+
+# Run semi-NMF
+t0 <- proc.time()
+fl0 <- flash(Y,
+             ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential),
+             var_type = 0,
+             greedy_Kmax = 40,
+             nullcheck = FALSE,
+             backfit = FALSE,
+             verbose = 3)
+
+# Refine with proper variance structure
+fl_snmf <- flash_init(Y, var_type = 2, S = s1)
+fl_snmf <- flash_factors_init(fl_snmf, fl0, 
+                            ebnm_fn = c(ebnm_point_laplace, ebnm_point_exponential))
+fl_snmf <- flash_backfit(fl_snmf, extrapolate = FALSE, maxiter = 100, verbose = 3)
+fl_snmf <- flash_backfit(fl_snmf, extrapolate = TRUE, maxiter = 100, verbose = 3)
+t1 <- proc.time()
+
+# Record timing
+timings$fl_snmf <- t1 - t0
+print(timings$fl_snmf)
+
+# user     system  elapsed 
+# 25.436   2.515  27.959  
+```
+
+
+### Matrix Factorization with Laplace Priors
+
+Decompose the matrix using Laplace priors for both loadings and factors, which encourages capturing both positive and negative direction of the disease mechanism.
+
+```{r laplace-mf, message=FALSE, eval=FALSE}
+t0 <- proc.time()
+fl0_mf <- flash(Y,
+                ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace),
+                var_type = 0,
+                greedy_Kmax = 40,
+                nullcheck = FALSE,
+                backfit = FALSE,
+                verbose = 3)
+
+# Refine with proper variance structure
+fl_mf <- flash_init(Y, var_type = 2, S = s1)
+fl_mf <- flash_factors_init(fl_mf, fl0_mf, 
+                          ebnm_fn = c(ebnm_point_laplace, ebnm_point_laplace))
+fl_mf <- flash_backfit(fl_mf, extrapolate = FALSE, maxiter = 100, verbose = 3)
+fl_mf <- flash_backfit(fl_mf, extrapolate = TRUE, maxiter = 100, verbose = 3)
+t1 <- proc.time()
+
+# Record timing
+timings$fl_mf <- t1 - t0
+print(timings$fl_mf)
+
+# user    system  elapsed 
+# 105.807   9.128 114.916  
+```
+
+Save the factor loadings for downstream analysis.
+
+```{r save-factors, eval=FALSE}
+# Extract and save factor loadings
+fl_mf_ldf <- ldf(fl_mf, type = "i")
+fl_snmf_ldf <- ldf(fl_snmf, type = "i")
+
+save(fl_snmf, file = "../output/immune_snmf_z.RData")
+save(fl_mf, file = "../output/immune_mf_z.RData")
+save(fl_snmf_ldf, file = "../output/immune_snmf_factors_z.RData")
+save(fl_mf_ldf, file = "../output/immune_mf_factors_z.RData")
+```
+
+### Explore and Visualize Factors
+
+```{r load-factors}
+load("../output/immune_mf_z.RData")
+load("../output/immune_snmf_z.RData")
+load("../output/immune_mf_factors_z.RData")
+load("../output/immune_snmf_factors_z.RData")
+```
+
+
+#### Heatmap Visualization of Factors
+
+Visualization showing factor effects across traits by heatmap.
+
+```{r factor-heatmaps}
+source('../code/plot_factors.R')
+
+# Plot semi-NMF factors
+F_snmf <- fl_snmf_ldf$F
+p_snmf <- plot_factors(F_snmf, row_names = rownames(F_snmf),
+                      col_names = paste0("k", 1:ncol(F_snmf))) +
+          scale_fill_gradient2(low = viridis(3)[1], 
+                              high = viridis(3)[2], 
+                              name = "Factor Effect") +
+          xlab("Factor") +
+          ggtitle("Semi-NMF Factors") +
+          scale_x_discrete(position = "top") +
+          theme(axis.text.x = element_text(angle = 0),
+                panel.background = element_rect(fill = "white"),
+                axis.ticks = element_blank())
+
+# Plot Laplace MF factors
+F_mf <- fl_mf_ldf$F
+p_mf <- plot_factors(F_mf, row_names = rownames(F_mf),
+                    col_names = paste0("k", 1:ncol(F_mf))) +
+        scale_fill_gradient2(low = viridis(3)[1], 
+                            high = viridis(3)[2], 
+                            name = "Factor Effect") +
+        xlab("Factors") +
+        ggtitle("Laplace MF Factors") +
+        scale_x_discrete(position = "top") +
+        theme(axis.text.x = element_text(angle = 0),
+              panel.background = element_rect(fill = "white"),
+              axis.ticks = element_blank())
+
+# Combine plots
+plot_grid(p_snmf, p_mf, nrow = 2, ncol = 1)
+```
+
+From semi-NMF model, K1 is dominantly impact IBD, CD, and UC. From Laplace MF model, K1 has dominantly negative impact on IBD, CD, and UC. 
+
+
+
+
+### Visualiztion of Residuals
+
+#### Semi-Nonnegative Matrix Factorization (semi-NMF)
+
+```{r}
+snmf_res <- residuals(fl_snmf)
+
+snmf_res_long <- as.data.frame(snmf_res) %>%
+  rownames_to_column("variant") %>%
+  pivot_longer(-variant, names_to = "trait", values_to = "residual")
+
+ggplot(snmf_res_long, aes(x = residual)) +
+  # Histogram (counts)
+  geom_histogram(
+    aes(y = after_stat(count)),  # Just show raw counts
+    bins = 30, 
+    fill = "skyblue", 
+    color = "white",
+    alpha = 0.7
+  ) +
+  # # Density line (scaled to match histogram)
+  # geom_density(
+  #   aes(y = after_stat(count)),  # Scale density to counts
+  #   color = "darkblue", 
+  #   linewidth = 1,
+  #   adjust = 1.5
+  # ) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
+  facet_wrap(~trait, scales = "free_y") +
+  labs(
+    title = "Residual Histograms with Density Curves",
+    x = "Residual Value", 
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Set up the plotting grid (3 rows x 4 columns)
+par(mfrow = c(3, 4))  # mar adjusts margins (bottom, left, top, right)
+
+# Get unique trait names
+traits <- unique(snmf_res_long$trait)
+
+# Create QQ-plots for each trait
+for (i in seq_along(traits)) {
+  # Subset data for current trait
+  trait_data <- snmf_res_long$residual[snmf_res_long$trait == traits[i]]
+  
+  # Create QQ-plot
+  qqnorm(trait_data, 
+         main = traits[i],  # Title with trait name
+         cex.main = 0.9,   # Smaller title size
+         col = "skyblue",   # Point color
+         pch = 17,          # Triangle points
+         cex = 0.8)         # Point size
+  
+  # Add three reference lines:
+  #qqline(trait_data, col = "red", lwd = 1, lty = 2)  # Default QQ line (data-based)
+  abline(a = 0, b = 1, col = "red", lwd = 1)       # y = x line (ideal)
+  
+  # Add legend (only to first plot)
+  if (i == 1) {
+    legend("topleft", 
+           legend = c("Data points", "y = x line"),
+           col = c("skyblue", "red"),
+           pch = c(17, NA, NA),
+           lty = c(NA, 2, 1),
+           cex = 0.7)
+  }
+}
+
+# Reset plotting parameters
+par(mfrow = c(1, 1))
+```
+
+#### Matrix Factorization with Laplace Priors
+
+```{r}
+mf_res <- residuals(fl_mf)
+
+mf_res_long <- as.data.frame(mf_res) %>%
+  rownames_to_column("variant") %>%
+  pivot_longer(-variant, names_to = "trait", values_to = "residual")
+
+ggplot(mf_res_long, aes(x = residual)) +
+  # Histogram (counts)
+  geom_histogram(
+    aes(y = after_stat(count)),  # Just show raw counts
+    bins = 30, 
+    fill = "skyblue", 
+    color = "white",
+    alpha = 0.7
+  ) +
+  # # Density line (scaled to match histogram)
+  # geom_density(
+  #   aes(y = after_stat(count)),  # Scale density to counts
+  #   color = "darkblue", 
+  #   linewidth = 1,
+  #   adjust = 1.5
+  # ) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
+  facet_wrap(~trait, scales = "free_y") +
+  labs(
+    title = "Residual Histograms with Density Curves",
+    x = "Residual Value", 
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Set up the plotting grid (3 rows x 4 columns)
+par(mfrow = c(3, 4))  # mar adjusts margins (bottom, left, top, right)
+
+# Get unique trait names
+traits <- unique(mf_res_long$trait)
+
+# Create QQ-plots for each trait
+for (i in seq_along(traits)) {
+  # Subset data for current trait
+  trait_data <- mf_res_long$residual[mf_res_long$trait == traits[i]]
+  
+  # Create QQ-plot
+  qqnorm(trait_data, 
+         main = traits[i],  # Title with trait name
+         cex.main = 0.9,   # Smaller title size
+         col = "skyblue",   # Point color
+         pch = 17,          # Triangle points
+         cex = 0.8)         # Point size
+  
+  # Add three reference lines:
+  #qqline(trait_data, col = "red", lwd = 1, lty = 2)  # Default QQ line (data-based)
+  abline(a = 0, b = 1, col = "red", lwd = 1)       # y = x line (ideal)
+  
+  # Add legend (only to first plot)
+  if (i == 1) {
+    legend("topleft", 
+           legend = c("Data points", "y = x line"),
+           col = c("skyblue", "red"),
+           pch = c(17, NA, NA),
+           lty = c(NA, 2, 1),
+           cex = 0.7)
+  }
+}
+
+# Reset plotting parameters
+par(mfrow = c(1, 1))
+```
+
+
+
+
+

@@ -31,16 +31,45 @@ library(gridExtra)
 ```
 
 Load flash objects which have loadings and factors and dataframe with effect size and standard error of variants. 
-```{r}
+```{r load-data}
 load('../data/autoimmune_combined_results.RData')
+
+
 load('../output/immune_snmf_factors.RData')
+L <- fl_snmf_ldf$L
+colnames(L) <- c(paste0('k', 1:ncol(L)))
+L_df <- as.data.frame(L) %>%
+  rownames_to_column("variant_id") %>%
+  pivot_longer(cols = -variant_id, 
+               names_to = "factor", 
+               values_to = "loading")
+# Get top variants per factor
+top_variants_snmf <- L_df %>%
+  group_by(factor) %>%
+  arrange(desc(abs(loading))) %>%
+  slice_head(n = 1) %>%  # Top 5 variants per factor
+  ungroup()
+
 load('../output/immune_mf_factors.RData')
+L <- fl_mf_ldf$L
+colnames(L) <- c(paste0('k', 1:ncol(L)))
+L_df <- as.data.frame(L) %>%
+  rownames_to_column("variant_id") %>%
+  pivot_longer(cols = -variant_id, 
+               names_to = "factor", 
+               values_to = "loading")
+# Get top variants per factor
+top_variants_mf <- L_df %>%
+  group_by(factor) %>%
+  arrange(desc(abs(loading))) %>%
+  slice_head(n = 1) %>%  # Top 5 variants per factor
+  ungroup()
 ```
 
 
 Extract high loading variants for each loadings
 
-```{r}
+```{r forestplot-data, eval=FALSE}
 L <- fl_mf_ldf$L
 colnames(L) <- c(paste0('k', 1:ncol(L)))
 
@@ -59,10 +88,7 @@ top_variants_mf <- L_df %>%
   arrange(desc(abs(loading))) %>%
   slice_head(n = 1) %>%  # Top 5 variants per factor
   ungroup()
-```
 
-
-```{r}
 # Get top 5 variants per factor
 top_variants <- L_df %>%
   group_by(factor) %>%
@@ -82,7 +108,7 @@ plot_data <- combined_results %>%
 ```
 
 
-```{r}
+```{r forestplot, eval=FALSE}
 plot_single_variant <- function(variant_data) {
   # Prepare labels
   label_text <- cbind(
@@ -130,6 +156,9 @@ walk2(all_plots, nested_plots, ~{
 ```
 
 
+#### Semi-Nonnegative Matrix Factorization (semi-NMF)
+
+
 ```{r}
 # Get path of all png files
 snmf_png_files <- file.path("..", "output", "forest_plots", "snmf", 
@@ -147,6 +176,7 @@ plots <- lapply(snmf_png_files, function(x) {
 grid.arrange(grobs = plots, ncol = 2)
 ```
 
+### Matrix Factorization with Laplace Priors
 
 ```{r}
 # Get path of all png files

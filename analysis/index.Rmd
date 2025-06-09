@@ -16,5 +16,11 @@ See [here](https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50J
 
 + [Exploring group-specific factors of the autoimmune GWAS data.](autoimmune_group.html)
 
++ [Exploring high loadings variants of the autoimmune GWAS data.](autoimmune_loadings.html)
+
++ [Factorizing the autoimmune GWAS data set by using Z-score.](autoimmune_factors_z.html)
+
++ [Factorizing the autoimmune GWAS data set by only using significant signals.](autoimmune_factors_significant.html)
+
 
 
