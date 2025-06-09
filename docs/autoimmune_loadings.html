@@ -9,9 +9,10 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
+<meta name="author" content="Zining Qi" />
 
 
-<title>Autoimmune Disease Matrix Factorization</title>
+<title>Exploring loadings of the autoimmune GWAS data</title>
 
 <script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -269,8 +270,9 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Autoimmune Disease Matrix
-Factorization</h1>
+<h1 class="title toc-ignore">Exploring loadings of the autoimmune GWAS
+data</h1>
+<h4 class="author">Zining Qi</h4>
 
 </div>
 
@@ -303,7 +305,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
 aria-hidden="true"></span> 0
 </p>
@@ -340,6 +342,90 @@ class="panel-collapse collapse">
 <p>Great! Since the R Markdown file has been committed to the Git
 repository, you know the exact version of the code that produced these
 results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
 </div>
 </div>
 </div>
@@ -397,10 +483,11 @@ have uncommitted changes.
 <div id="versions" class="tab-pane fade">
 <p>
 These are the previous versions of the repository in which changes were
-made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML
-(<code>docs/index.html</code>) files. If you’ve configured a remote Git
-repository (see <code>?wflow_git_remote</code>), click on the hyperlinks
-in the table below to view the files as they were in that past version.
+made to the R Markdown (<code>analysis/autoimmune_loadings.Rmd</code>)
+and HTML (<code>docs/autoimmune_loadings.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -429,7 +516,7 @@ Message
 Rmd
 </td>
 <td>
-<a href="https://github.com/zq2209/ebmf_immune/blob/0c8ed180ec60803002fb31565c8ac8badb6c1503/analysis/index.Rmd" target="_blank">0c8ed18</a>
+<a href="https://github.com/zq2209/ebmf_immune/blob/0c8ed180ec60803002fb31565c8ac8badb6c1503/analysis/autoimmune_loadings.Rmd" target="_blank">0c8ed18</a>
 </td>
 <td>
 zq2209
@@ -443,19 +530,19 @@ update
 </tr>
 <tr>
 <td>
-html
+Rmd
 </td>
 <td>
-<a href="https://rawcdn.githack.com/zq2209/ebmf_immune/00d6b4daecc4a4a88cadd16afffa2286b3e3a29b/docs/index.html" target="_blank">00d6b4d</a>
+<a href="https://github.com/zq2209/ebmf_immune/blob/260a7828490ee3f4c0d5f182002e13a351c803d5/analysis/autoimmune_loadings.Rmd" target="_blank">260a782</a>
 </td>
 <td>
 “John
 </td>
 <td>
-2025-05-06
+2025-06-08
 </td>
 <td>
-Build site.
+update analysis on significant signals
 </td>
 </tr>
 <tr>
@@ -463,152 +550,16 @@ Build site.
 Rmd
 </td>
 <td>
-<a href="https://github.com/zq2209/ebmf_immune/blob/728dde39a20f1b879afe6884b2308d0f81c96787/analysis/index.Rmd" target="_blank">728dde3</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-05-06
-</td>
-<td>
-update webpage
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/zq2209/ebmf_immune/dbc9ca80b6467ca180ced0b96b0bee86ca567b8f/docs/index.html" target="_blank">dbc9ca8</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-05-01
-</td>
-<td>
-Build site.
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/zq2209/ebmf_immune/blob/02da8de7fd014e23006e20bd925abec4e84a00ce/analysis/index.Rmd" target="_blank">02da8de</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-05-01
-</td>
-<td>
-update
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/zq2209/ebmf_immune/02da8de7fd014e23006e20bd925abec4e84a00ce/docs/index.html" target="_blank">02da8de</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-05-01
-</td>
-<td>
-update
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/zq2209/ebmf_immune/blob/4a0f61c7237aae19aa2c8350e0929b447018c369/analysis/index.Rmd" target="_blank">4a0f61c</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-05-01
-</td>
-<td>
-update
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/zq2209/ebmf_immune/blob/6ed1b928996d523d8490116619758a702d667a74/analysis/index.Rmd" target="_blank">6ed1b92</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-04-30
-</td>
-<td>
-update
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/zq2209/ebmf_immune/blob/b72308588969fb1c4537265b3bf6705a12aa2fb8/analysis/index.Rmd" target="_blank">b723085</a>
+<a href="https://github.com/zq2209/ebmf_immune/blob/c2ed01f72d395d008590306b376eb1e4691a1057/analysis/autoimmune_loadings.Rmd" target="_blank">c2ed01f</a>
 </td>
 <td>
 Zining Qi
 </td>
 <td>
-2025-04-28
+2025-05-29
 </td>
 <td>
-update
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/zq2209/ebmf_immune/blob/d519be2ae00532d4b8ac149811018bfc624b76ad/analysis/index.Rmd" target="_blank">d519be2</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-04-28
-</td>
-<td>
-initial commit
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/zq2209/ebmf_immune/d519be2ae00532d4b8ac149811018bfc624b76ad/docs/index.html" target="_blank">d519be2</a>
-</td>
-<td>
-“John
-</td>
-<td>
-2025-04-28
-</td>
-<td>
-initial commit
+update forestplot
 </td>
 </tr>
 </tbody>
@@ -618,24 +569,217 @@ initial commit
 </div>
 </div>
 </div>
-<p>See <a
-href="https://docs.google.com/spreadsheets/d/1SmX4JMabPz-nPkBrG63zJNYbph50JFiJ15y6fThV3So/edit?gid=0#gid=0">here</a>
-for an overview of GWAS data information</p>
-<p><strong>Analyses:</strong></p>
-<ul>
-<li><p><a href="autoimmune.html">Initial processing and exploration of
-the autoimmune GWAS data.</a></p></li>
-<li><p><a href="autoimmune_factors.html">Factorizing the autoimmune GWAS
-data set.</a></p></li>
-<li><p><a href="autoimmune_group.html">Exploring group-specific factors
-of the autoimmune GWAS data.</a></p></li>
-<li><p><a href="autoimmune_loadings.html">Exploring high loadings
-variants of the autoimmune GWAS data.</a></p></li>
-<li><p><a href="autoimmune_factors_z.html">Factorizing the autoimmune
-GWAS data set by using Z-score.</a></p></li>
-<li><p><a href="autoimmune_factors_significant.html">Factorizing the
-autoimmune GWAS data set by only using significant signals.</a></p></li>
-</ul>
+<p>This page is to check individual example for the preliminary results
+to see if results make sense. For example, we could pick out some
+variants have high loadings that sharing among traits. And then make
+forest plot for effect size and standard error for each trait.</p>
+<pre class="r"><code># Load required packages
+library(tidyverse)    # For data manipulation and visualization
+library(data.table)   # For efficient data reading and processing
+library(pheatmap)
+
+library(png)
+library(grid)
+library(gridExtra)</code></pre>
+<p>Load flash objects which have loadings and factors and dataframe with
+effect size and standard error of variants.</p>
+<pre class="r"><code>load(&#39;../data/autoimmune_combined_results.RData&#39;)
+
+
+load(&#39;../output/immune_snmf_factors.RData&#39;)
+L &lt;- fl_snmf_ldf$L
+colnames(L) &lt;- c(paste0(&#39;k&#39;, 1:ncol(L)))
+L_df &lt;- as.data.frame(L) %&gt;%
+  rownames_to_column(&quot;variant_id&quot;) %&gt;%
+  pivot_longer(cols = -variant_id, 
+               names_to = &quot;factor&quot;, 
+               values_to = &quot;loading&quot;)
+# Get top variants per factor
+top_variants_snmf &lt;- L_df %&gt;%
+  group_by(factor) %&gt;%
+  arrange(desc(abs(loading))) %&gt;%
+  slice_head(n = 1) %&gt;%  # Top 5 variants per factor
+  ungroup()
+
+load(&#39;../output/immune_mf_factors.RData&#39;)
+L &lt;- fl_mf_ldf$L
+colnames(L) &lt;- c(paste0(&#39;k&#39;, 1:ncol(L)))
+L_df &lt;- as.data.frame(L) %&gt;%
+  rownames_to_column(&quot;variant_id&quot;) %&gt;%
+  pivot_longer(cols = -variant_id, 
+               names_to = &quot;factor&quot;, 
+               values_to = &quot;loading&quot;)
+# Get top variants per factor
+top_variants_mf &lt;- L_df %&gt;%
+  group_by(factor) %&gt;%
+  arrange(desc(abs(loading))) %&gt;%
+  slice_head(n = 1) %&gt;%  # Top 5 variants per factor
+  ungroup()</code></pre>
+<p>Extract high loading variants for each loadings</p>
+<pre class="r"><code>L &lt;- fl_mf_ldf$L
+colnames(L) &lt;- c(paste0(&#39;k&#39;, 1:ncol(L)))
+
+L_df &lt;- as.data.frame(L) %&gt;%
+  rownames_to_column(&quot;variant_id&quot;) %&gt;%
+  pivot_longer(cols = -variant_id, 
+               names_to = &quot;factor&quot;, 
+               values_to = &quot;loading&quot;)
+
+merged_data &lt;- combined_results %&gt;%
+  inner_join(L_df, by = &quot;variant_id&quot;)
+
+# Get top N variants per factor
+top_variants_mf &lt;- L_df %&gt;%
+  group_by(factor) %&gt;%
+  arrange(desc(abs(loading))) %&gt;%
+  slice_head(n = 1) %&gt;%  # Top 5 variants per factor
+  ungroup()
+
+# Get top 5 variants per factor
+top_variants &lt;- L_df %&gt;%
+  group_by(factor) %&gt;%
+  arrange(desc(abs(loading))) %&gt;%
+  slice(1:5) %&gt;%  # Top 5 variants per factor
+  ungroup()
+
+# Merge with effect data
+plot_data &lt;- combined_results %&gt;%
+  inner_join(top_variants, by = &quot;variant_id&quot;) %&gt;%
+  mutate(
+    ci_low = beta - 1.96 * standard_error,
+    ci_high = beta + 1.96 * standard_error,
+    # Label for the variant (shows loading value)
+    variant_label = paste0(variant_id, &quot; (λ=&quot;, round(loading, 2), &quot;)&quot;)
+  )</code></pre>
+<pre class="r"><code>plot_single_variant &lt;- function(variant_data) {
+  # Prepare labels
+  label_text &lt;- cbind(
+    c(&quot;Trait&quot;, variant_data$disease),
+    c(&quot;Effect [95% CI]&quot;, 
+      sprintf(&quot;%.2f [%.2f, %.2f]&quot;, 
+              variant_data$beta, 
+              variant_data$ci_low, 
+              variant_data$ci_high))
+  )
+  
+  forestplot(
+    labeltext = label_text,
+    mean = c(NA, variant_data$beta),
+    lower = c(NA, variant_data$ci_low),
+    upper = c(NA, variant_data$ci_high),
+    title = paste(&quot;Variant:&quot;, variant_data$variant_label[1], 
+                 &quot;\nFactor:&quot;, variant_data$factor[1]),
+    xticks = seq(round(min(variant_data$ci_low))-0.1, round(max(variant_data$ci_high))+0.1, 0.05),
+    boxsize = 0.2,
+    lineheight = unit(0.8, &quot;cm&quot;),
+    col = fpColors(box = &quot;royalblue&quot;, line = &quot;darkblue&quot;, summary = &quot;royalblue&quot;),
+    graphwidth = unit(6, &quot;cm&quot;),
+    clip = c(-1, 1)  # Force consistent x-axis limits
+  )
+}
+
+nested_plots &lt;- plot_data %&gt;%
+  group_by(factor, variant_id) %&gt;%
+  group_split()
+
+plot_single_variant(nested_plots[[1]])
+
+all_plots &lt;- map(nested_plots, plot_single_variant)
+
+walk2(all_plots, nested_plots, ~{
+  factor_dir &lt;- file.path(&quot;../output/forest_plots&quot;, unique(.y$factor))
+  if (!dir.exists(factor_dir)) dir.create(factor_dir, recursive = TRUE)
+  
+  png(file.path(factor_dir, paste0(unique(.y$variant_id), &quot;.png&quot;)),
+      width = 1200, height = 800, res = 150)
+  print(.x)
+  dev.off()
+})</code></pre>
+<div id="semi-nonnegative-matrix-factorization-semi-nmf"
+class="section level4">
+<h4>Semi-Nonnegative Matrix Factorization (semi-NMF)</h4>
+<pre class="r"><code># Get path of all png files
+snmf_png_files &lt;- file.path(&quot;..&quot;, &quot;output&quot;, &quot;forest_plots&quot;, &quot;snmf&quot;, 
+                         top_variants_snmf$factor, 
+                         paste0(top_variants_snmf$variant_id, &quot;.png&quot;))
+
+# Read images into a list
+# Load PNGs as raster objects
+plots &lt;- lapply(snmf_png_files, function(x) {
+  img &lt;- readPNG(x)
+  rasterGrob(img, interpolate = TRUE)
+})
+
+# Arrange in a grid (e.g., 4x2)
+grid.arrange(grobs = plots, ncol = 2)</code></pre>
+<p><img src="figure/autoimmune_loadings.Rmd/unnamed-chunk-1-1.png" width="840" style="display: block; margin: auto;" /></p>
+</div>
+<div id="matrix-factorization-with-laplace-priors"
+class="section level3">
+<h3>Matrix Factorization with Laplace Priors</h3>
+<pre class="r"><code># Get path of all png files
+mf_png_files &lt;- file.path(&quot;..&quot;, &quot;output&quot;, &quot;forest_plots&quot;, &quot;mf&quot;, 
+                         top_variants_mf$factor, 
+                         paste0(top_variants_mf$variant_id, &quot;.png&quot;))
+
+# Read images into a list
+# Load PNGs as raster objects
+plots &lt;- lapply(mf_png_files, function(x) {
+  img &lt;- readPNG(x)
+  rasterGrob(img, interpolate = TRUE)
+})
+
+# Arrange in a grid (e.g., 4x2)
+grid.arrange(grobs = plots, ncol = 2)</code></pre>
+<p><img src="figure/autoimmune_loadings.Rmd/unnamed-chunk-2-1.png" width="840" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()
+# R version 4.4.3 (2025-02-28)
+# Platform: aarch64-apple-darwin20
+# Running under: macOS Sequoia 15.5
+# 
+# Matrix products: default
+# BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+# LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+# 
+# locale:
+# [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+# 
+# time zone: America/Chicago
+# tzcode source: internal
+# 
+# attached base packages:
+# [1] grid      stats     graphics  grDevices utils     datasets  methods  
+# [8] base     
+# 
+# other attached packages:
+#  [1] gridExtra_2.3     png_0.1-8         pheatmap_1.0.12   data.table_1.17.4
+#  [5] lubridate_1.9.4   forcats_1.0.0     stringr_1.5.1     dplyr_1.1.4      
+#  [9] purrr_1.0.4       readr_2.1.5       tidyr_1.3.1       tibble_3.2.1     
+# [13] ggplot2_3.5.2     tidyverse_2.0.0  
+# 
+# loaded via a namespace (and not attached):
+#  [1] sass_0.4.10        generics_0.1.4     stringi_1.8.7      hms_1.1.3         
+#  [5] digest_0.6.37      magrittr_2.0.3     evaluate_1.0.3     timechange_0.3.0  
+#  [9] RColorBrewer_1.1-3 fastmap_1.2.0      rprojroot_2.0.4    workflowr_1.7.1   
+# [13] jsonlite_2.0.0     whisker_0.4.1      promises_1.3.3     scales_1.4.0      
+# [17] jquerylib_0.1.4    cli_3.6.5          rlang_1.1.6        withr_3.0.2       
+# [21] cachem_1.1.0       yaml_2.3.10        tools_4.4.3        tzdb_0.5.0        
+# [25] httpuv_1.6.16      vctrs_0.6.5        R6_2.6.1           lifecycle_1.0.4   
+# [29] git2r_0.36.2       fs_1.6.6           pkgconfig_2.0.3    pillar_1.10.2     
+# [33] bslib_0.9.0        later_1.4.2        gtable_0.3.6       glue_1.8.0        
+# [37] Rcpp_1.0.14        xfun_0.52          tidyselect_1.2.1   rstudioapi_0.17.1 
+# [41] knitr_1.50         farver_2.1.2       htmltools_0.5.8.1  rmarkdown_2.29    
+# [45] compiler_4.4.3</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
